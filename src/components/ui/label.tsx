@@ -1,12 +1,16 @@
 import * as React from "react"
 import { Label as LabelPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
+
+interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+  className?: string
+}
 
 function Label({
   className,
   ...props
-}) {
+}: LabelProps) {
   return (
     <LabelPrimitive.Root
       data-slot="label"
