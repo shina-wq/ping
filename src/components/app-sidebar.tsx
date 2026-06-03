@@ -30,7 +30,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/ui/logo";
 
@@ -55,17 +54,11 @@ const isNavItemActive = (pathname: string, href: string) =>
 
 export function AppSidebar() {
   const { pathname } = useLocation();
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className={isCollapsed ? "items-center px-2 py-4" : "px-4 py-5"}>
-        <Logo
-          size={isCollapsed ? "sm" : "md"}
-          showText={!isCollapsed}
-          className={isCollapsed ? "w-full justify-center" : undefined}
-        />
+    <Sidebar>
+      <SidebarHeader className="px-4 py-5">
+        <Logo />
       </SidebarHeader>
 
       <SidebarContent>
@@ -91,24 +84,21 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={isCollapsed ? "px-2 py-4" : "p-4"}>
+      <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size={isCollapsed ? "sm" : "lg"}
-                  className={isCollapsed ? "justify-center px-0 gap-0" : "gap-3"}
-                >
-                  <Avatar size={isCollapsed ? "sm" : "default"}>
-                    <AvatarFallback>AT</AvatarFallback>
+                <SidebarMenuButton size="lg" className="gap-3">
+                  <Avatar className="size-9">
+                    <AvatarFallback className="bg-primary/10 text-sm text-primary">
+                      AT
+                    </AvatarFallback>
                   </Avatar>
-                  {!isCollapsed && (
-                    <div className="min-w-0 flex-1 text-left">
-                      <p className="truncate text-sm font-semibold">Aiko Tanaka</p>
-                      <p className="text-xs text-muted-foreground">Student</p>
-                    </div>
-                  )}
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="truncate text-sm font-semibold">Aiko Tanaka</p>
+                    <p className="text-xs text-muted-foreground">Student</p>
+                  </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-56">
