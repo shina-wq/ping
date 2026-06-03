@@ -30,6 +30,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/ui/logo";
 
@@ -48,76 +49,88 @@ const navItems: NavItem[] = [
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
+// Pure helper — extracted so the component stays clean and this is independently testable
+const isNavItemActive = (pathname: string, href: string) =>
+  pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+
 export function AppSidebar() {
   const { pathname } = useLocation();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar>
-      <SidebarHeader className="px-4 py-5">
-        <Logo />
+    <Sidebar collapsible="icon">
+      <SidebarHeader className={isCollapsed ? "items-center px-2 py-4" : "px-4 py-5"}>
+        <Logo
+          size={isCollapsed ? "sm" : "md"}
+          showText={!isCollapsed}
+          className={isCollapsed ? "w-full justify-center" : undefined}
+        />
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-4">
-              {navItems.map(({ label, icon: Icon, href }) => {
-                const isActive =
-                  pathname === href ||
-                  (href !== "/dashboard" && pathname.startsWith(href));
-
-                return (
+            <SidebarMenu>
+              {navItems.map(({ label, icon: Icon, href }) => (
                 <SidebarMenuItem key={label}>
-                  <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isNavItemActive(pathname, href)}
+                    tooltip={label}
+                  >
                     <Link to={href}>
                       <Icon />
                       <span>{label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                );
-              })}
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex w-full items-center gap-3 rounded-2xl border border-border/70 bg-background/80 p-3 shadow-xs transition-colors hover:bg-muted/50"
-            >
-              <Avatar className="size-9">
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                  AT
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="truncate text-sm font-semibold text-foreground">Aiko Tanaka</p>
-                <p className="text-xs text-muted-foreground">Student</p>
-              </div>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56">
-            <DropdownMenuLabel>
-              <p className="text-sm font-medium">Aiko Tanaka</p>
-              <p className="text-xs text-muted-foreground">Student</p>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <UserRound className="size-4" /> Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="size-4" /> Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive">
-              <LogOut className="size-4" /> Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <SidebarFooter className={isCollapsed ? "px-2 py-4" : "p-4"}>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size={isCollapsed ? "sm" : "lg"}
+                  className={isCollapsed ? "justify-center px-0 gap-0" : "gap-3"}
+                >
+                  <Avatar size={isCollapsed ? "sm" : "default"}>
+                    <AvatarFallback>AT</AvatarFallback>
+                  </Avatar>
+                  {!isCollapsed && (
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className="truncate text-sm font-semibold">Aiko Tanaka</p>
+                      <p className="text-xs text-muted-foreground">Student</p>
+                    </div>
+                  )}
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-56">
+                <DropdownMenuLabel>
+                  <p className="text-sm font-medium">Aiko Tanaka</p>
+                  <p className="text-xs text-muted-foreground">Student</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <UserRound className="size-4" /> Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="size-4" /> Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                  <LogOut className="size-4" /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
