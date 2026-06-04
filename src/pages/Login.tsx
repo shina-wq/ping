@@ -6,14 +6,13 @@ import type { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { LuTrendingUpDown } from "react-icons/lu";
 
-import { loginSchema } from "../utils/loginSchema";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/ui/logo";
+import { loginSchema } from "@/utils/loginSchema";
 
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { Label } from "../components/ui/label";
-import { Logo } from "../components/ui/logo";
-
-const authGraphPath = new URL("../assets/auth-graph.png", import.meta.url).href;
+import authGraphPath from "@/assets/auth-graph.png";
 
 const Login = () => {
   const navigate = useNavigate();

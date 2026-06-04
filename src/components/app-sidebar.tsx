@@ -4,22 +4,13 @@ import {
   FileText,
   GraduationCap,
   LayoutGrid,
-  LogOut,
   Settings,
-  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Logo } from "@/components/ui/logo";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Logo } from "@/components/ui/logo";
+import { CURRENT_USER, UserMenu } from "@/components/user-menu";
 
 type NavItem = {
   label: string;
@@ -48,7 +39,6 @@ const navItems: NavItem[] = [
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
-// Pure helper — extracted so the component stays clean and this is independently testable
 const isNavItemActive = (pathname: string, href: string) =>
   pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
@@ -71,6 +61,7 @@ export function AppSidebar() {
                     asChild
                     isActive={isNavItemActive(pathname, href)}
                     tooltip={label}
+                    className="font-[450] data-active:font-[550]"
                   >
                     <Link to={href}>
                       <Icon />
@@ -87,38 +78,27 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <UserMenu
+              contentSide="top"
+              contentAlign="start"
+              trigger={
                 <SidebarMenuButton size="lg" className="gap-3">
                   <Avatar className="size-9">
                     <AvatarFallback className="bg-primary/10 text-sm text-primary">
-                      AT
+                      {CURRENT_USER.initials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-sm font-semibold">Aiko Tanaka</p>
-                    <p className="text-xs text-muted-foreground">Student</p>
+                    <p className="truncate text-sm font-semibold">
+                      {CURRENT_USER.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {CURRENT_USER.role}
+                    </p>
                   </div>
                 </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-56">
-                <DropdownMenuLabel>
-                  <p className="text-sm font-medium">Aiko Tanaka</p>
-                  <p className="text-xs text-muted-foreground">Student</p>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <UserRound className="size-4" /> Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="size-4" /> Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  <LogOut className="size-4" /> Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              }
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

@@ -1,31 +1,26 @@
 import {
   ArrowUpRight,
-  Bell,
   BookOpen,
   CircleCheckBig,
   Clock3,
   FileText,
-  LogOut,
-  Search,
-  Settings,
   Star,
-  UserRound,
   type LucideIcon,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { usePageHeader } from "@/components/page-header-context";
+import { CURRENT_USER } from "@/components/user-menu";
+import { formatGreeting } from "@/lib/greeting";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -84,7 +79,7 @@ const statCards: StatCard[] = [
   { label: "Active Courses", value: "3", icon: BookOpen, accent: "bg-primary/10 text-primary" },
   { label: "Pending Assignments", value: "5", icon: FileText, accent: "bg-orange-500/10 text-orange-500" },
   { label: "Average Grade", value: "79%", icon: Star, accent: "bg-emerald-500/10 text-emerald-600" },
-  { label: "Due This Week", value: "2", icon: Clock3, accent: "bg-rose-500/10 text-rose-500" },
+  { label: "Assignments due this week", value: "2", icon: FileText, accent: "bg-rose-500/10 text-rose-500" },
 ];
 
 const courses: CourseCard[] = [
@@ -115,10 +110,38 @@ const reminders: ReminderCard[] = [
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function SectionCardHeader({
+  title,
+  actionLabel,
+  actionHref,
+}: {
+  title: string;
+  actionLabel: string;
+  actionHref?: string;
+}) {
+  return (
+    <CardHeader className="items-center border-b px-5 py-5 sm:px-6">
+      <CardTitle className="text-base font-semibold leading-none">{title}</CardTitle>
+      {actionHref ? (
+        <CardAction className="self-center">
+          <Button
+            type="button"
+            variant="link"
+            className="h-auto px-0 text-sm font-medium text-primary"
+            asChild
+          >
+            <Link to={actionHref}>{actionLabel}</Link>
+          </Button>
+        </CardAction>
+      ) : null}
+    </CardHeader>
+  );
+}
+
 function StatTile({ label, value, icon: Icon, accent }: StatCard) {
   return (
-    <Card className="p-0 py-0 shadow-xs">
-      <div className="flex h-full flex-col gap-4 p-5 sm:p-6">
+    <Card className="min-w-0 p-0 py-0 shadow-xs">
+      <div className="flex h-full min-w-0 flex-col gap-3 p-4 sm:gap-4 sm:p-5">
         <div className={cn("flex size-9 items-center justify-center rounded-xl", accent)}>
           <Icon className="size-4" />
         </div>
@@ -133,9 +156,9 @@ function StatTile({ label, value, icon: Icon, accent }: StatCard) {
 
 function CourseTile({ title, instructor, tasks, progress, accent }: CourseCard) {
   return (
-    <Card className="overflow-hidden p-0 py-0 shadow-xs">
+    <Card className="min-w-0 overflow-hidden p-0 py-0 shadow-xs">
       <div className={cn("h-1 w-full", accent)} />
-      <div className="flex h-full flex-col gap-5 p-5 sm:p-6">
+      <div className="flex h-full min-w-0 flex-col gap-4 p-4 sm:gap-5 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-foreground sm:text-base">{title}</h3>
@@ -150,9 +173,11 @@ function CourseTile({ title, instructor, tasks, progress, accent }: CourseCard) 
           </div>
           <Progress value={progress} className="h-1.5" />
         </div>
-        <Button variant="ghost" className="h-auto justify-start gap-1 px-0 text-primary hover:bg-transparent hover:text-primary/80">
-          Open Course
-          <ArrowUpRight className="size-4" />
+        <Button variant="ghost" className="h-auto justify-start gap-1 px-0 text-primary hover:bg-transparent hover:text-primary/80" asChild>
+          <Link to="/courses" className="flex items-center gap-1">
+            Open Course
+            <ArrowUpRight className="size-4" />
+          </Link>
         </Button>
       </div>
     </Card>
@@ -196,95 +221,41 @@ function ReminderRow({ title, detail, icon: Icon, accent, selected }: ReminderCa
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const dashboardGreetingName = CURRENT_USER.name.split(" ")[0] ?? CURRENT_USER.name;
+
 export default function Dashboard() {
+  usePageHeader({
+    title: formatGreeting(dashboardGreetingName),
+    description: "Here's what's on your plate today.",
+  });
+
   return (
-    <div className="min-h-dvh bg-linear-to-br from-background via-background to-muted/30">
-      <header className="mb-6 flex flex-col gap-4 px-4 pt-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 lg:px-8 lg:pt-6">
-        <div className="flex items-start gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-              Good morning, Aiko 👋
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-              Here&apos;s what&apos;s on your plate today.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="relative hidden sm:block">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="h-10 w-56 rounded-full border-border/70 bg-background/90 pl-10 pr-4 shadow-xs"
-            />
-          </div>
-
-          <Button variant="outline" size="icon" className="relative">
-            <Bell className="size-4" />
-            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
-            <span className="sr-only">Notifications</span>
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-10 gap-3 rounded-full border border-border/70 bg-background/80 px-2.5 shadow-xs">
-                <Avatar className="size-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">AT</AvatarFallback>
-                </Avatar>
-                <span className="hidden text-sm font-medium text-foreground sm:inline">Aiko Tanaka</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <p className="text-sm font-medium text-foreground">Aiko Tanaka</p>
-                <p className="text-xs text-muted-foreground">Student</p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem><UserRound className="size-4" /> Profile</DropdownMenuItem>
-              <DropdownMenuItem><Settings className="size-4" /> Settings</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
-                <LogOut className="size-4" /> Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-
-      <div className="space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="w-full min-w-0 space-y-6">
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {statCards.map((card) => <StatTile key={card.label} {...card} />)}
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Card className="p-0 py-0 shadow-xs">
-            <CardHeader className="flex-row items-center justify-between gap-3 border-b px-5 py-5 sm:px-6">
-              <CardTitle>My Courses</CardTitle>
-              <button type="button" className="text-sm font-medium text-primary transition-colors hover:text-primary/80">View all</button>
-            </CardHeader>
-            <CardContent className="grid gap-4 px-5 py-5 sm:px-6 md:grid-cols-2 xl:grid-cols-3">
-              {courses.map((course) => <CourseTile key={course.title} {...course} />)}
+            <SectionCardHeader title="My Courses" actionLabel="View all" actionHref="/courses" />
+            <CardContent className="grid grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2 sm:px-6">
+              {courses.slice(0, 2).map((course) => (
+                <CourseTile key={course.title} {...course} />
+              ))}
             </CardContent>
           </Card>
-
+ 
           <Card className="p-0 py-0 shadow-xs">
-            <CardHeader className="flex-row items-center justify-between gap-3 border-b px-5 py-5 sm:px-6">
-              <CardTitle>Upcoming Assignments</CardTitle>
-              <button type="button" className="text-sm font-medium text-primary transition-colors hover:text-primary/80">View all</button>
-            </CardHeader>
+            <SectionCardHeader title="Upcoming Assignments" actionLabel="View all" actionHref="/assignments" />
             <CardContent className="divide-y px-5 py-4 sm:px-6">
               {assignments.map((assignment) => <AssignmentRow key={assignment.title} {...assignment} />)}
             </CardContent>
           </Card>
         </section>
-
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+ 
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Card className="p-0 py-0 shadow-xs">
-            <CardHeader className="flex-row items-center justify-between gap-3 border-b px-5 py-5 sm:px-6">
-              <CardTitle>Recent Grades</CardTitle>
-              <button type="button" className="text-sm font-medium text-primary transition-colors hover:text-primary/80">Full gradebook</button>
-            </CardHeader>
+            <SectionCardHeader title="Recent Grades" actionLabel="Full gradebook" actionHref="/grades" />
             <CardContent className="px-5 py-4 sm:px-6">
               <Table>
                 <TableHeader>
@@ -308,18 +279,14 @@ export default function Dashboard() {
               </Table>
             </CardContent>
           </Card>
-
+ 
           <Card className="p-0 py-0 shadow-xs">
-            <CardHeader className="flex-row items-center justify-between gap-3 border-b px-5 py-5 sm:px-6">
-              <CardTitle>Reminders</CardTitle>
-              <button type="button" className="text-sm font-medium text-primary transition-colors hover:text-primary/80">See all</button>
-            </CardHeader>
+            <SectionCardHeader title="Reminders" actionLabel="See all" actionHref="/reminders" />
             <CardContent className="space-y-3 px-5 py-5 sm:px-6">
               {reminders.map((reminder) => <ReminderRow key={reminder.title} {...reminder} />)}
             </CardContent>
           </Card>
         </section>
-      </div>
     </div>
   );
 }
