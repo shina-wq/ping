@@ -5,24 +5,26 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { LuTrendingUpDown } from "react-icons/lu";
+import { toast } from "sonner";
 
 import { useAuth } from "@/contexts/auth-context";
+import { ApiError } from "@/lib/api-error";
+import { loginSchema } from "@/utils/loginSchema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/ui/logo";
-import { loginSchema } from "@/utils/loginSchema";
 
 import authGraphPath from "@/assets/auth-graph.png";
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-const Login = () => {
-  const { user, isLoading } = useAuth();
+export default function Login() {
+  const { user, isLoading, login } = useAuth();
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const {
     register,
@@ -33,8 +35,7 @@ const Login = () => {
     defaultValues: { email: "", password: "" },
   });
 
-  // Wait for session rehydration before deciding to redirect.
-  // Avoids a flash of the login form for already-authenticated users.
+  // Wait for session rehydration before deciding whether to redirect.
   if (isLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
@@ -43,18 +44,25 @@ const Login = () => {
     );
   }
 
-  // Already authenticated, send straight to the dashboard.
+  // Already authenticated — send to dashboard.
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const onSubmit = async (_data: LoginValues) => {
+  const onSubmit = async (data: LoginValues) => {
     try {
-      setLoading(true);
-      // TODO (Phase 4): call useAuth().login(data)
-      navigate("/dashboard");
+      setSubmitting(true);
+      await login(data);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      // ApiError carries the server's message; fall back for unexpected errors.
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Something went wrong. Please try again.";
+      toast.error(message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -62,17 +70,12 @@ const Login = () => {
     <div className="flex min-h-dvh overflow-hidden">
       {/* Left: form */}
       <div className="w-screen min-h-dvh md:w-[60vw] px-12 pt-8 pb-12">
-        {/* Logo */}
         <div className="mb-10">
           <Logo />
         </div>
 
-        {/* Form container */}
         <div className="lg:w-[70%] h-3/4 md:h-full flex flex-col justify-center">
-          <h3 className="text-xl font-semibold text-foreground">
-            Welcome Back
-          </h3>
-
+          <h3 className="text-xl font-semibold text-foreground">Welcome Back</h3>
           <p className="text-sm text-muted-foreground mt-2 mb-8">
             Please enter your details to log in
           </p>
@@ -100,7 +103,7 @@ const Login = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="min 8 characters"
+                  placeholder="**********"
                   autoComplete="current-password"
                   className="pr-10"
                   {...register("password")}
@@ -119,10 +122,9 @@ const Login = () => {
               )}
             </div>
 
-            {/* Submit */}
             <Button
               type="submit"
-              loading={loading}
+              loading={submitting}
               className="w-full uppercase tracking-widest"
             >
               Login
@@ -133,24 +135,19 @@ const Login = () => {
 
       {/* Right: branding */}
       <div className="hidden md:block w-[42vw] min-h-dvh bg-primary/10 overflow-hidden p-8 relative">
-        {/* Decorative shapes */}
         <div className="w-48 h-48 rounded-[40px] bg-brand-accent absolute -top-16 -left-5" />
         <div className="w-48 h-48 rounded-[40px] bg-primary/60 absolute -bottom-16 -right-5" />
 
-        {/* Card */}
         <div className="flex gap-6 bg-card p-4 rounded-xl shadow-md shadow-primary/10 border border-border relative z-10">
           <div className="w-12 h-12 flex items-center justify-center text-[26px] text-primary-foreground bg-primary rounded-full">
             <LuTrendingUpDown />
           </div>
           <div className="flex flex-col justify-center">
-            <h6 className="text-sm text-muted-foreground">
-              Track Your Grades & Assignments
-            </h6>
+            <h6 className="text-sm text-muted-foreground">Track Your Grades & Assignments</h6>
             <p className="text-lg text-foreground">A+</p>
           </div>
         </div>
 
-        {/* Image */}
         <img
           src={authGraphPath}
           alt="Grade analytics"
@@ -159,6 +156,4 @@ const Login = () => {
       </div>
     </div>
   );
-};
-
-export default Login;
+}

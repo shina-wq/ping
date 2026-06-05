@@ -10,10 +10,17 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getSession, login as apiLogin, logout as apiLogout } from "@/api/auth";
+import {
+  getSession,
+  login as apiLogin,
+  logout as apiLogout,
+  setToken,
+  clearToken,
+} from "@/api/auth";
+
 import type { AuthUser, LoginPayload } from "@/api/auth";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// Types
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -22,74 +29,95 @@ type AuthContextValue = {
   logout: () => Promise<void>;
 };
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+// Context
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
+// Provider
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
 
-  // Rehydrate session from the HttpOnly cookie on app load.
+  // Session rehydration on app load
   useEffect(() => {
     let cancelled = false;
 
-    getSession()
-      .then((sessionUser) => {
-        if (!cancelled) setUser(sessionUser);
-      })
-      .catch(() => {
+    const init = async () => {
+      try {
+        const sessionUser = await getSession();
+
+        if (!cancelled) {
+          setUser(sessionUser);
+        }
+      } catch {
         if (!cancelled) setUser(null);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setIsLoading(false);
-      });
+      }
+    };
+
+    init();
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Listen for 401 events dispatched by the apiClient interceptor.
-  // Using a ref for navigate to avoid re-registering the listener on every render.
+  // Global unauthorized handler (401)
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
 
   useEffect(() => {
     const handleUnauthorized = () => {
+      clearToken();
       setUser(null);
       navigateRef.current("/login", { replace: true });
     };
 
     window.addEventListener("auth:unauthorized", handleUnauthorized);
+
     return () => {
       window.removeEventListener("auth:unauthorized", handleUnauthorized);
     };
   }, []);
 
+  // Login
   const login = useCallback(async (payload: LoginPayload) => {
-    const { user: loggedInUser } = await apiLogin(payload);
+    const { user: loggedInUser, token } = await apiLogin(payload);
+
+    setToken(token);
     setUser(loggedInUser);
   }, []);
 
+  // Logout
   const logout = useCallback(async () => {
-    await apiLogout();
-    setUser(null);
-    navigateRef.current("/login", { replace: true });
+    try {
+      await apiLogout();
+    } finally {
+      clearToken();
+      setUser(null);
+      navigateRef.current("/login", { replace: true });
+    }
   }, []);
 
+  // Context value
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isLoading, login, logout }),
+    () => ({
+      user,
+      isLoading,
+      login,
+      logout,
+    }),
     [user, isLoading, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+// Hook
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);

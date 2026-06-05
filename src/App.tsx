@@ -2,8 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 
 import { PageHeaderProvider } from "@/components/page-header-context";
+import { Toaster } from "@/components/ui/sonner";
 import { router } from "@/router";
 
+// Created outside the component so it's never recreated on re-renders.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -19,6 +21,8 @@ export default function App() {
       <PageHeaderProvider>
         <RouterProvider router={router} />
       </PageHeaderProvider>
+      {/* Toaster must be outside RouterProvider so toasts survive route transitions. */}
+      <Toaster position="top-right" />
     </QueryClientProvider>
   );
 }
