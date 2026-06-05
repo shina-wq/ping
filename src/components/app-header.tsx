@@ -2,6 +2,7 @@ import { Bell, Search } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
+import { useNotificationCount } from "@/hooks/use-notification-count";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -9,15 +10,12 @@ type AppHeaderProps = {
   title: string;
   description?: string;
   actions?: ReactNode;
-  notificationCount?: number;
 };
 
-export function AppHeader({
-  title,
-  description,
-  actions,
-  notificationCount = 3,
-}: AppHeaderProps) {
+export function AppHeader({ title, description, actions }: AppHeaderProps) {
+  // Fetched internally — notification count is global state, not a page concern.
+  const notificationCount = useNotificationCount();
+
   return (
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
@@ -25,9 +23,7 @@ export function AppHeader({
           {title}
         </h1>
         {description ? (
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            {description}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">{description}</p>
         ) : null}
       </div>
 

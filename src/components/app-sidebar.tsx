@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
+import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Logo } from "@/components/ui/logo";
 import {
@@ -22,7 +23,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CURRENT_USER, UserMenu } from "@/components/user-menu";
+import { UserMenu } from "@/components/user-menu";
+
+// Nav config
 
 type NavItem = {
   label: string;
@@ -42,8 +45,24 @@ const navItems: NavItem[] = [
 const isNavItemActive = (pathname: string, href: string) =>
   pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
+/** Derives up to two initials from a full name. e.g. "Aiko Tanaka" → "AT" */
+const getInitials = (name: string): string =>
+  name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+// Component
+
 export function AppSidebar() {
   const { pathname } = useLocation();
+  const { user } = useAuth();
+
+  const displayName = user?.name ?? "";
+  const displayRole = user?.role ?? "";
+  const initials = user ? getInitials(user.name) : "";
 
   return (
     <Sidebar>
@@ -85,16 +104,12 @@ export function AppSidebar() {
                 <SidebarMenuButton size="lg" className="gap-3">
                   <Avatar className="size-9">
                     <AvatarFallback className="bg-primary/10 text-sm text-primary">
-                      {CURRENT_USER.initials}
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-sm font-semibold">
-                      {CURRENT_USER.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {CURRENT_USER.role}
-                    </p>
+                    <p className="truncate text-sm font-semibold">{displayName}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{displayRole}</p>
                   </div>
                 </SidebarMenuButton>
               }
