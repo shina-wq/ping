@@ -1,26 +1,139 @@
+import { format } from "date-fns";
+
 import { usePageHeader } from "@/components/page-header-context";
+import { useGrades } from "@/hooks/use-grades";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+
+function getScoreClass(score: number, maxScore: number): string {
+  const pct = (score / maxScore) * 100;
+  if (pct >= 90) return "text-emerald-600";
+  if (pct >= 75) return "text-primary";
+  if (pct >= 60) return "text-orange-500";
+  return "text-rose-500";
+}
+
+function GradesSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <TableRow key={i}>
+          <TableCell>
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </TableCell>
+          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+          <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-20" /></TableCell>
+          <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-12" /></TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+}
 
 export default function Grades() {
   usePageHeader({
     title: "Grades",
-    description: "Review your academic performances, gradebook, and cumulative GPA statistics.",
+    description: "Your full academic performance record.",
   });
 
+  const { data: grades, isLoading, error } = useGrades();
+
+  // Compute overall average from all grades.
+  const average =
+    grades?.length
+      ? Math.round(
+          grades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) / grades.length
+        )
+      : null;
+
   return (
-    <div className="w-full min-w-0 space-y-6">
-      <Card className="shadow-xs">
-        <CardHeader className="flex flex-row items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-            <GraduationCap className="size-5" />
-          </div>
-          <CardTitle className="text-lg font-semibold">Gradebook & Academic Analytics</CardTitle>
+    <div className="space-y-6">
+      {/* ── Summary ── */}
+      <Card className="p-0 shadow-xs">
+        <div className="flex flex-col gap-1 p-5">
+          <p className="text-sm text-muted-foreground">Overall Average</p>
+          {isLoading ? (
+            <Skeleton className="h-9 w-20" />
+          ) : (
+            <p className={cn(
+              "text-3xl font-semibold",
+              average === null
+                ? "text-muted-foreground"
+                : getScoreClass(average, 100)
+            )}>
+              {average !== null ? `${average}%` : "—"}
+            </p>
+          )}
+        </div>
+      </Card>
+
+      {/* ── Full gradebook ── */}
+      <Card className="p-0 py-0 shadow-xs">
+        <CardHeader className="border-b px-5 py-5 sm:px-6">
+          <CardTitle className="text-base font-semibold">All Grades</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            This page will display your grades, grade charts, cumulative GPA, and an interactive GPA calculator tool.
-          </p>
+        <CardContent className="px-0 py-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Assessment</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead className="text-right">Score</TableHead>
+                <TableHead className="text-right">Grade</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <GradesSkeleton />
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                    Failed to load grades. Please try again.
+                  </TableCell>
+                </TableRow>
+              ) : !grades?.length ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                    No grades recorded yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                grades.map((grade) => {
+                  const pct = Math.round((grade.score / grade.maxScore) * 100);
+                  const scoreClass = getScoreClass(grade.score, grade.maxScore);
+                  return (
+                    <TableRow key={grade.id}>
+                      <TableCell>
+                        <p className="font-medium text-foreground">{grade.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(grade.gradedAt), "MMM d, yyyy")}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{grade.courseName}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {grade.score} / {grade.maxScore}
+                      </TableCell>
+                      <TableCell className={cn("text-right font-semibold", scoreClass)}>
+                        {pct}%
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

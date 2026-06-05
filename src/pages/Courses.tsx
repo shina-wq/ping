@@ -1,178 +1,126 @@
-import { useState } from "react";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { usePageHeader } from "@/components/page-header-context";
+import { useCourses } from "@/hooks/use-courses";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-type Course = {
-  id: string;
-  title: string;
-  instructor: string;
-  tasks: number;
-  progress: number;
-  colorClass: string;
-  status: "in-progress" | "completed" | "not-started";
-};
-
-const coursesData: Course[] = [
-  {
-    id: "math-101",
-    title: "Mathematics 101",
-    instructor: "Dr. Johnson",
-    tasks: 3,
-    progress: 72,
-    colorClass: "bg-blue-500",
-    status: "in-progress",
-  },
-  {
-    id: "eng-lit",
-    title: "English Literature",
-    instructor: "Ms. Carter",
-    tasks: 1,
-    progress: 55,
-    colorClass: "bg-sky-500",
-    status: "in-progress",
-  },
-  {
-    id: "bio-fund",
-    title: "Biology Fundamentals",
-    instructor: "Mr. Osei",
-    tasks: 2,
-    progress: 88,
-    colorClass: "bg-emerald-500",
-    status: "in-progress",
-  },
-  {
-    id: "world-hist",
-    title: "World History",
-    instructor: "Mrs. Patel",
-    tasks: 4,
-    progress: 40,
-    colorClass: "bg-orange-500",
-    status: "in-progress",
-  },
-  {
-    id: "comp-sci",
-    title: "Computer Science",
-    instructor: "Mr. Lee",
-    tasks: 2,
-    progress: 63,
-    colorClass: "bg-purple-500",
-    status: "in-progress",
-  },
-  {
-    id: "art-design",
-    title: "Art & Design",
-    instructor: "Ms. Dubois",
-    tasks: 0,
-    progress: 91,
-    colorClass: "bg-pink-500",
-    status: "completed",
-  },
+// Cycles through accent colours — API doesn't carry colour data.
+// TODO (Phase 5): extract to shared constant alongside Dashboard's copy.
+const COURSE_ACCENTS = [
+  "bg-primary",
+  "bg-sky-500",
+  "bg-emerald-500",
+  "bg-violet-500",
+  "bg-orange-500",
 ];
+
+function CourseCardSkeleton() {
+  return (
+    <Card className="min-w-0 overflow-hidden p-0 py-0 shadow-xs">
+      <Skeleton className="h-1 w-full rounded-none" />
+      <div className="flex flex-col gap-4 p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-28" />
+          </div>
+          <Skeleton className="h-6 w-14 rounded-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-3 w-8" />
+          </div>
+          <Skeleton className="h-1.5 w-full" />
+        </div>
+        <Skeleton className="h-4 w-24" />
+      </div>
+    </Card>
+  );
+}
 
 export default function Courses() {
   usePageHeader({
     title: "My Courses",
-    description: "6 enrolled courses - Fall Semester 2024",
+    description: "All your enrolled courses.",
   });
 
-  const [activeTab, setActiveTab] = useState<"all" | "in-progress" | "completed" | "not-started">("all");
+  const { data: courses, isLoading, error } = useCourses();
 
-  const filteredCourses = coursesData.filter((course) => {
-    return activeTab === "all" || course.status === activeTab;
-  });
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => <CourseCardSkeleton key={i} />)}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="py-12 text-center text-sm text-muted-foreground">
+        Failed to load courses. Please try again.
+      </p>
+    );
+  }
+
+  if (!courses?.length) {
+    return (
+      <p className="py-12 text-center text-sm text-muted-foreground">
+        You are not enrolled in any courses yet.
+      </p>
+    );
+  }
 
   return (
-    <div className="w-full min-w-0 space-y-6">
-      {/* Filter Tabs Row */}
-      <div className="flex flex-wrap gap-2">
-        {(["all", "in-progress", "completed", "not-started"] as const).map((tab) => {
-          const label = {
-            all: "All Courses",
-            "in-progress": "In Progress",
-            completed: "Completed",
-            "not-started": "Not Started",
-          }[tab];
-          const isActive = activeTab === tab;
-          return (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer border",
-                isActive
-                  ? "bg-primary border-primary text-primary-foreground font-semibold"
-                  : "bg-background border-border text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-              )}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {courses.map((course, index) => {
+        const accent = COURSE_ACCENTS[index % COURSE_ACCENTS.length];
+        const tasks = `${course.taskCount} ${course.taskCount === 1 ? "task" : "tasks"}`;
 
-      {/* Courses Grid */}
-      {filteredCourses.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCourses.map((course) => (
-            <Card
-              key={course.id}
-              className="group min-w-0 overflow-hidden p-0 py-0 shadow-xs hover:shadow-md transition-all duration-300 border border-border bg-card"
-            >
-              {/* Top accent color stripe */}
-              <div className={cn("h-1 w-full", course.colorClass)} />
-              
-              <CardContent className="flex flex-col justify-between gap-5 p-5">
-                {/* Course Title, Instructor & Tasks badge */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <h3 className="truncate text-base font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-                      {course.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {course.instructor}
-                    </p>
-                  </div>
-                  <Badge variant={course.tasks > 0 ? "info" : "secondary"}>
-                    {course.tasks} {course.tasks === 1 ? "task" : "tasks"}
-                  </Badge>
+        return (
+          <Card key={course.id} className="min-w-0 overflow-hidden p-0 py-0 shadow-xs">
+            <div className={cn("h-1 w-full", accent)} />
+            <div className="flex h-full flex-col gap-4 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground sm:text-base">
+                    {course.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{course.instructor}</p>
                 </div>
+                <Badge variant="secondary" className="rounded-full px-2.5 py-1 text-xs">
+                  {tasks}
+                </Badge>
+              </div>
 
-                {/* Progress bar and numeric labels */}
-                <div className="space-y-2 select-none">
-                  <div className="flex items-center justify-between text-xs sm:text-sm font-medium">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="text-foreground font-semibold">{course.progress}%</span>
-                  </div>
-                  <Progress value={course.progress} />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="font-medium text-foreground">{course.progress}%</span>
                 </div>
+                <Progress value={course.progress} className="h-1.5" />
+              </div>
 
-                {/* Bottom navigation link */}
-                <div className="pt-1">
-                  <Button variant="link" className="h-auto p-0 font-bold">
-                    Open Course
-                    <ArrowRight className="size-4 ml-0.5 transition-transform group-hover:translate-x-1 duration-200" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-border rounded-2xl bg-muted/20">
-          <BookOpen className="size-12 text-muted-foreground/60 mb-3" />
-          <h3 className="text-base font-semibold text-foreground">No courses found</h3>
-          <p className="text-sm text-muted-foreground max-w-xs mt-1">
-            We couldn't find any courses matching your selection. Try adjusting your search query or filters.
-          </p>
-        </div>
-      )}
+              <Button
+                variant="ghost"
+                className="h-auto justify-start gap-1 px-0 text-primary hover:bg-transparent hover:text-primary/80"
+                asChild
+              >
+                <Link to={`/courses/${course.id}`} className="flex items-center gap-1">
+                  Open Course
+                  <ArrowUpRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
