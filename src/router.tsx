@@ -1,8 +1,10 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
+import RootLayout from "@/layouts/RootLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
-import Dashboard from "@/pages/Dashboard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
 import Courses from "@/pages/Courses";
 import Assignments from "@/pages/Assignments";
 import Grades from "@/pages/Grades";
@@ -12,45 +14,35 @@ import Settings from "@/pages/Settings";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <DashboardLayout />,
+    // RootLayout mounts AuthProvider
+    element: <RootLayout />,
     children: [
       {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
+        path: "/login",
+        element: <Login />,
       },
       {
-        path: "dashboard",
-        element: <Dashboard />,
-      },
-      {
-        path: "courses",
-        element: <Courses />,
-      },
-      {
-        path: "assignments",
-        element: <Assignments />,
-      },
-      {
-        path: "grades",
-        element: <Grades />,
-      },
-      {
-        path: "reminders",
-        element: <Reminders />,
-      },
-      {
-        path: "notifications",
-        element: <Notifications />,
-      },
-      {
-        path: "settings",
-        element: <Settings />,
+        // ProtectedRoute for all dashboard routes behind authentication.
+        element: <ProtectedRoute />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: [
+              {
+                path: "/",
+                element: <Navigate to="/dashboard" replace />,
+              },
+              { path: "/dashboard", element: <Dashboard /> },
+              { path: "/courses", element: <Courses /> },
+              { path: "/assignments", element: <Assignments /> },
+              { path: "/grades", element: <Grades /> },
+              { path: "/reminders", element: <Reminders /> },
+              { path: "/notifications", element: <Notifications /> },
+              { path: "/settings", element: <Settings /> },
+            ],
+          },
+        ],
       },
     ],
-  },
-  {
-    path: "/login",
-    element: <Login />,
   },
 ]);

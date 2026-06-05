@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { LuTrendingUpDown } from "react-icons/lu";
 
+import { useAuth } from "@/contexts/auth-context";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,10 @@ import { loginSchema } from "@/utils/loginSchema";
 
 import authGraphPath from "@/assets/auth-graph.png";
 
+type LoginValues = z.infer<typeof loginSchema>;
+
 const Login = () => {
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -24,23 +28,30 @@ const Login = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
-  type LoginValues = z.infer<typeof loginSchema>;
+  // Wait for session rehydration before deciding to redirect.
+  // Avoids a flash of the login form for already-authenticated users.
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
-  const onSubmit = async (data: LoginValues) => {
+  // Already authenticated, send straight to the dashboard.
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const onSubmit = async (_data: LoginValues) => {
     try {
       setLoading(true);
-
-      console.log(data);
-
-      // TODO: replace with real auth API
+      // TODO (Phase 4): call useAuth().login(data)
       navigate("/dashboard");
     } finally {
       setLoading(false);
@@ -70,7 +81,6 @@ const Login = () => {
             {/* Email */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email Address</Label>
-
               <Input
                 id="email"
                 type="text"
@@ -78,18 +88,14 @@ const Login = () => {
                 autoComplete="email"
                 {...register("email")}
               />
-
               {errors.email && (
-                <p className="text-xs text-destructive">
-                  {errors.email.message}
-                </p>
+                <p className="text-xs text-destructive">{errors.email.message}</p>
               )}
             </div>
 
             {/* Password */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Password</Label>
-
               <div className="relative">
                 <Input
                   id="password"
@@ -99,7 +105,6 @@ const Login = () => {
                   className="pr-10"
                   {...register("password")}
                 />
-
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
@@ -109,11 +114,8 @@ const Login = () => {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-
               {errors.password && (
-                <p className="text-xs text-destructive">
-                  {errors.password.message}
-                </p>
+                <p className="text-xs text-destructive">{errors.password.message}</p>
               )}
             </div>
 
@@ -140,12 +142,10 @@ const Login = () => {
           <div className="w-12 h-12 flex items-center justify-center text-[26px] text-primary-foreground bg-primary rounded-full">
             <LuTrendingUpDown />
           </div>
-
           <div className="flex flex-col justify-center">
             <h6 className="text-sm text-muted-foreground">
               Track Your Grades & Assignments
             </h6>
-
             <p className="text-lg text-foreground">A+</p>
           </div>
         </div>

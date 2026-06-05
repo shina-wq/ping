@@ -1,11 +1,11 @@
+import { Outlet } from "react-router-dom";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import { PageHeaderSlot } from "@/components/page-header-context";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Outlet } from "react-router-dom";
 
 export default function DashboardLayout() {
-  console.log("DashboardLayout rendering");
   return (
     <TooltipProvider>
       <SidebarProvider>
