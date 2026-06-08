@@ -16,19 +16,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { STATUS_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-// ─── Status config ────────────────────────────────────────────────────────────
-// TODO (Phase 5): consolidate with Dashboard's copy into a shared constant.
 
-const STATUS_CONFIG: Record<AssignmentStatus, { label: string; className: string }> = {
-  upcoming:     { label: "Upcoming",     className: "bg-sky-500/10 text-sky-500" },
-  due_soon:     { label: "Due Soon",     className: "bg-primary/10 text-primary" },
-  due_tomorrow: { label: "Due Tomorrow", className: "bg-rose-500/10 text-rose-500" },
-  overdue:      { label: "Overdue",      className: "bg-red-600/10 text-red-600" },
-  submitted:    { label: "Submitted",    className: "bg-emerald-500/10 text-emerald-600" },
-  graded:       { label: "Graded",       className: "bg-emerald-500/10 text-emerald-600" },
-};
 
 const PENDING_STATUSES: AssignmentStatus[] = [
   "upcoming",

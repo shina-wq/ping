@@ -8,17 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { COURSE_ACCENTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-// Cycles through accent colours — API doesn't carry colour data.
-// TODO (Phase 5): extract to shared constant alongside Dashboard's copy.
-const COURSE_ACCENTS = [
-  "bg-primary",
-  "bg-sky-500",
-  "bg-emerald-500",
-  "bg-violet-500",
-  "bg-orange-500",
-];
+
 
 function CourseCardSkeleton() {
   return (

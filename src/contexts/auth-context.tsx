@@ -72,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      clearToken();
       setUser(null);
       navigateRef.current("/login", { replace: true });
     };

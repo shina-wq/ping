@@ -40,9 +40,6 @@ export function clearToken() {
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>("/auth/login", payload);
 
-  // Persist token immediately
-  setToken(data.token);
-
   return data;
 }
 
@@ -59,11 +56,7 @@ export async function getSession(): Promise<AuthUser | null> {
 
   if (!token) return null;
 
-  const { data } = await apiClient.get<AuthUser>("/auth/session", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const { data } = await apiClient.get<AuthUser>("/auth/session");
 
   return data;
 }

@@ -1,6 +1,8 @@
 import { apiClient } from "@/api/client";
 
-// Types
+// -------------------------
+// TYPES
+// -------------------------
 
 export type AssignmentStatus =
   | "upcoming"
@@ -15,8 +17,21 @@ export type Assignment = {
   title: string;
   courseId: string;
   courseName: string;
-  dueDate: string; // ISO 8601 date string
+  dueDate: string; // ISO 8601
   status: AssignmentStatus;
+};
+
+export type CreateAssignmentInput = {
+  courseId: string;
+  title: string;
+  description?: string;
+  dueDate: string; // ISO 8601
+};
+
+export type UpdateAssignmentInput = {
+  title?: string;
+  description?: string;
+  dueDate?: string;
 };
 
 export type SubmitAssignmentPayload = {
@@ -24,21 +39,49 @@ export type SubmitAssignmentPayload = {
   fileUrl?: string;
 };
 
-// Requests
+// -------------------------
+// QUERIES
+// -------------------------
 
-export async function getAssignments(): Promise<Assignment[]> {
+export const getAssignments = async (): Promise<Assignment[]> => {
   const { data } = await apiClient.get<Assignment[]>("/assignments");
   return data;
-}
+};
 
-export async function getAssignment(id: string): Promise<Assignment> {
+export const getAssignment = async (id: string): Promise<Assignment> => {
   const { data } = await apiClient.get<Assignment>(`/assignments/${id}`);
   return data;
-}
+};
 
-export async function submitAssignment(
+// -------------------------
+// MUTATIONS
+// -------------------------
+
+export const addAssignment = async (
+  input: CreateAssignmentInput
+): Promise<Assignment> => {
+  const { data } = await apiClient.post<Assignment>("/assignments", input);
+  return data;
+};
+
+export const updateAssignment = async (
+  id: string,
+  input: UpdateAssignmentInput
+): Promise<Assignment> => {
+  const { data } = await apiClient.patch<Assignment>(
+    `/assignments/${id}`,
+    input
+  );
+  return data;
+};
+
+export const submitAssignment = async (
   id: string,
   payload: SubmitAssignmentPayload
-): Promise<void> {
+): Promise<void> => {
   await apiClient.post(`/assignments/${id}/submit`, payload);
-}
+};
+
+export const deleteAssignment = async (id: string): Promise<void> => {
+  await apiClient.delete(`/assignments/${id}`);
+};

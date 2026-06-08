@@ -1,7 +1,8 @@
 import axios from "axios";
 import { toApiError } from "@/lib/api-error";
 
-// Get token safely from localStorage
+// Defined locally rather than importing from auth.ts to avoid a circular
+// dependency (auth.ts imports apiClient from this module).
 const getToken = (): string | null => {
   return localStorage.getItem("auth_token");
 };

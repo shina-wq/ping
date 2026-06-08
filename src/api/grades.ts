@@ -1,25 +1,47 @@
 import { apiClient } from "@/api/client";
 
-// Types
+// -------------------------
+// TYPES
+// -------------------------
 
 export type Grade = {
   id: string;
-  title: string;       // assessment name, e.g. "Midterm Exam"
+  title: string;      // assessment name e.g. "Midterm Exam"
   courseId: string;
   courseName: string;
-  score: number;       // points earned
-  maxScore: number;    // total possible points
-  gradedAt: string;    // ISO 8601 date string
+  score: number;      // points earned
+  maxScore: number;   // total possible points
+  gradedAt: string;   // ISO 8601
 };
 
-// Requests
+export type CreateGradeInput = {
+  courseId: string;
+  assignmentId?: string;
+  title: string;
+  score: number;
+  maxScore: number;
+  gradedAt?: string;  // ISO 8601 — defaults to now if omitted
+};
 
-export async function getGrades(): Promise<Grade[]> {
+// -------------------------
+// QUERIES
+// -------------------------
+
+export const getGrades = async (): Promise<Grade[]> => {
   const { data } = await apiClient.get<Grade[]>("/grades");
   return data;
-}
+};
 
-export async function getGrade(id: string): Promise<Grade> {
+export const getGrade = async (id: string): Promise<Grade> => {
   const { data } = await apiClient.get<Grade>(`/grades/${id}`);
   return data;
-}
+};
+
+// -------------------------
+// MUTATIONS
+// -------------------------
+
+export const createGrade = async (input: CreateGradeInput): Promise<Grade> => {
+  const { data } = await apiClient.post<Grade>("/grades", input);
+  return data;
+};

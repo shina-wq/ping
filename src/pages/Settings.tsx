@@ -3,10 +3,9 @@ import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { getInitials } from "@/lib/format";
 
-/** Derives up to two initials from a full name. e.g. "Aiko Tanaka" → "AT" */
-const getInitials = (name: string): string =>
-  name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+
 
 export default function Settings() {
   usePageHeader({

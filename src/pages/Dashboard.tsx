@@ -127,7 +127,7 @@ function mapCourse(course: Course, index: number): CourseCard {
   return {
     id: course.id,
     title: course.title,
-    instructor: course.instructor,
+    instructor: course.instructor ?? "Unknown Instructor",
     tasks: `${course.taskCount} ${course.taskCount === 1 ? "task" : "tasks"}`,
     progress: course.progress,
     accent: COURSE_ACCENTS[index % COURSE_ACCENTS.length],
