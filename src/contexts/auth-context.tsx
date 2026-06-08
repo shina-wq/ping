@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -14,10 +15,8 @@ import {
   getSession,
   login as apiLogin,
   logout as apiLogout,
-  setToken,
   clearToken,
 } from "@/api/auth";
-
 import type { AuthUser, LoginPayload } from "@/api/auth";
 
 // Types
@@ -35,11 +34,18 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 // Provider
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
+
+  // Keep ref in sync after every render — avoids stale closure in event handlers
+  const navigateRef = useRef(navigate);
+  useLayoutEffect(() => {
+    navigateRef.current = navigate;
+  });
 
   // Session rehydration on app load
   useEffect(() => {
@@ -48,10 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const init = async () => {
       try {
         const sessionUser = await getSession();
-
-        if (!cancelled) {
-          setUser(sessionUser);
-        }
+        if (!cancelled) setUser(sessionUser);
       } catch {
         if (!cancelled) setUser(null);
       } finally {
@@ -66,10 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Global unauthorized handler (401)
-  const navigateRef = useRef(navigate);
-  navigateRef.current = navigate;
-
+  // Global 401 handler — dispatched from apiClient interceptor
   useEffect(() => {
     const handleUnauthorized = () => {
       setUser(null);
@@ -77,21 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     window.addEventListener("auth:unauthorized", handleUnauthorized);
-
-    return () => {
-      window.removeEventListener("auth:unauthorized", handleUnauthorized);
-    };
+    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
-  // Login
+  // apiLogin already handles setToken internally
   const login = useCallback(async (payload: LoginPayload) => {
-    const { user: loggedInUser, token } = await apiLogin(payload);
-
-    setToken(token);
+    const { user: loggedInUser } = await apiLogin(payload);
     setUser(loggedInUser);
   }, []);
 
-  // Logout
   const logout = useCallback(async () => {
     try {
       await apiLogout();
@@ -102,14 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Context value
   const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      isLoading,
-      login,
-      logout,
-    }),
+    () => ({ user, isLoading, login, logout }),
     [user, isLoading, login, logout]
   );
 
@@ -118,12 +106,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // Hook
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

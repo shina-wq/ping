@@ -35,13 +35,7 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
 
 function usePageHeaderContext() {
   const context = useContext(PageHeaderContext);
-
-  if (!context) {
-    throw new Error(
-      "Page header hooks must be used within PageHeaderProvider"
-    );
-  }
-
+  if (!context) throw new Error("Page header hooks must be used within PageHeaderProvider");
   return context;
 }
 
@@ -50,10 +44,9 @@ export function usePageHeader(config: PageHeaderConfig) {
 
   useEffect(() => {
     setOverride(config);
-
-    return () => {
-      setOverride(null);
-    };
+    return () => setOverride(null);
+    // Depend on values, not the config object reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.title, config.description, setOverride]);
 }
 
@@ -62,11 +55,7 @@ export function PageHeaderSlot() {
   const routeHeader = usePageHeaderFromRoute();
   const header = override ?? routeHeader;
 
-  if (!header) {
-    return null;
-  }
+  if (!header) return null;
 
-  return (
-    <AppHeader title={header.title} description={header.description} />
-  );
+  return <AppHeader title={header.title} description={header.description} />;
 }
