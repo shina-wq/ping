@@ -1,7 +1,6 @@
 import { apiClient } from "@/api/client";
 
 // Types
-
 export type LoginPayload = {
   email: string;
   password: string;
@@ -20,7 +19,6 @@ export type AuthResponse = {
 };
 
 // Token helpers
-
 const TOKEN_KEY = "auth_token";
 
 export function setToken(token: string) {
@@ -36,19 +34,14 @@ export function clearToken() {
 }
 
 // API Calls
-
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>("/auth/login", payload);
-
+  setToken(data.token);
   return data;
 }
 
 export async function logout(): Promise<void> {
-  try {
     await apiClient.post("/auth/logout");
-  } finally {
-    clearToken();
-  }
 }
 
 export async function getSession(): Promise<AuthUser | null> {
