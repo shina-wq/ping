@@ -1,14 +1,8 @@
 import { apiClient } from "@/api/client";
 
-// -------------------------
-// TYPES
-// -------------------------
-
+// Types
 export type AssignmentStatus =
   | "upcoming"
-  | "due_soon"
-  | "due_tomorrow"
-  | "overdue"
   | "submitted"
   | "graded";
 
@@ -39,10 +33,7 @@ export type SubmitAssignmentPayload = {
   fileUrl?: string;
 };
 
-// -------------------------
-// QUERIES
-// -------------------------
-
+// Queries
 export const getAssignments = async (): Promise<Assignment[]> => {
   const { data } = await apiClient.get<Assignment[]>("/assignments");
   return data;
@@ -53,10 +44,7 @@ export const getAssignment = async (id: string): Promise<Assignment> => {
   return data;
 };
 
-// -------------------------
-// MUTATIONS
-// -------------------------
-
+// Mutations
 export const addAssignment = async (
   input: CreateAssignmentInput
 ): Promise<Assignment> => {
