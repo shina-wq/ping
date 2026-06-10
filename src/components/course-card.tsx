@@ -2,7 +2,6 @@ import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { Course } from "@/api/courses";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -14,7 +13,6 @@ export type CourseCard = {
   id: string;
   title: string;
   instructor: string;
-  tasks: string;
   progress: number;
   accent: string;
 };
@@ -33,15 +31,13 @@ export function mapCourse(course: Course, index: number): CourseCard {
     id: course.id,
     title: course.title,
     instructor: course.instructor ?? "Unknown Instructor",
-    tasks: `${course.taskCount} ${course.taskCount === 1 ? "task" : "tasks"}`,
     progress: course.progress,
     accent: COURSE_ACCENTS[index % COURSE_ACCENTS.length],
   };
 }
 
 // Component
-
-export function CourseCard({ title, instructor, tasks, progress, accent }: CourseCard) {
+export function CourseCard({ id, title, instructor, progress, accent }: CourseCard) {
   return (
     <Card className="min-w-0 overflow-hidden p-0 py-0 shadow-xs">
       <div className={cn("h-1 w-full", accent)} />
@@ -51,9 +47,6 @@ export function CourseCard({ title, instructor, tasks, progress, accent }: Cours
             <h3 className="text-sm font-semibold text-foreground sm:text-base">{title}</h3>
             <p className="text-sm text-muted-foreground">{instructor}</p>
           </div>
-          <Badge variant="secondary" className="rounded-full px-2.5 py-1 text-xs">
-            {tasks}
-          </Badge>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
@@ -63,11 +56,11 @@ export function CourseCard({ title, instructor, tasks, progress, accent }: Cours
           <Progress value={progress} className="h-1.5" />
         </div>
         <Button
-          variant="ghost"
-          className="h-auto justify-start gap-1 px-0 text-primary hover:bg-transparent hover:text-primary/80"
+          variant="link"
+          className="h-auto px-0 text-sm font-medium text-primary"
           asChild
         >
-          <Link to="/courses" className="flex items-center gap-1">
+          <Link to={`/courses/${id}`} className="flex items-center gap-1">
             Open Course
             <ArrowUpRight className="size-4" />
           </Link>
@@ -78,7 +71,6 @@ export function CourseCard({ title, instructor, tasks, progress, accent }: Cours
 }
 
 // Skeleton
-
 export function CourseCardSkeleton({ count = 2 }: { count?: number }) {
   return (
     <>
