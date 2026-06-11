@@ -28,10 +28,10 @@ export default function CourseLayout() {
   const currentPath = location.pathname.split("/").pop() || "modules";
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Blue Header Section */}
-      <div className="bg-primary px-6 py-8 text-primary-foreground sm:px-10">
-        <div className="mb-4 flex items-center text-sm font-medium text-primary-foreground/80">
+    <div className="-mx-4 -mt-6 flex flex-col lg:-mx-8">
+      {/* Indigo Header Section */}
+      <div className="bg-primary px-6 py-8 text-primary-foreground sm:px-10 lg:px-12">
+        <div className="mb-4 mt-4 flex items-center text-sm font-medium text-primary-foreground/80">
           <Link to="/courses" className="hover:text-primary-foreground">
             My Courses
           </Link>
@@ -55,13 +55,13 @@ export default function CourseLayout() {
           </div>
           <div className="flex items-center gap-2">
             <Clock className="size-4" />
-            <span>Dec 14 — next deadline</span>
+            <span>Dec 14 - next deadline</span>
           </div>
         </div>
       </div>
 
       {/* Tabs Section */}
-      <div className="border-b border-border bg-background px-6 sm:px-10">
+      <div className="border-b border-border bg-background px-6 sm:px-10 lg:px-12">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           {TABS.map((tab) => {
             const isActive = currentPath === tab.path;
@@ -70,7 +70,7 @@ export default function CourseLayout() {
                 key={tab.path}
                 to={`/courses/${course.id}/${tab.path}`}
                 className={cn(
-                  "whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors",
+                  "whitespace-nowrap border-b-2 px-1 py-4 text-[14.5px] font-medium transition-colors",
                   isActive
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
@@ -84,7 +84,7 @@ export default function CourseLayout() {
       </div>
 
       {/* Content Section */}
-      <div className="flex-1 overflow-auto bg-background p-6 sm:p-10">
+      <div className="flex-1 overflow-auto bg-background p-6 sm:p-10 lg:px-12">
         <Outlet />
       </div>
     </div>

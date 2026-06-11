@@ -80,7 +80,7 @@ const VARIANTS = {
 
 export default function CourseAssignments() {
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="max-w-4xl">
       <div className="flex flex-col gap-4">
         {ASSIGNMENTS.map((assignment) => {
           const v = VARIANTS[assignment.iconVariant as keyof typeof VARIANTS];

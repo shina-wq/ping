@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Clock, Clock1, Clock10 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -31,40 +31,38 @@ const MODULES = [
 
 export default function CourseModules() {
   return (
-    <div className="mx-auto max-w-4xl">
-      <h2 className="mb-6 text-xl font-bold">Course Modules</h2>
-      
-      <div className="flex flex-col gap-4">
+    <div className="max-w-3xl">      
+      <div className="flex flex-col gap-6">
         {MODULES.map((mod) => (
           <Card
             key={mod.id}
-            className="flex cursor-pointer items-center justify-between p-4 shadow-sm transition-colors hover:bg-muted/50 sm:p-6"
+            className="flex cursor-pointer flex-row items-center justify-between p-6 shadow-sm transition-colors hover:bg-muted/50"
           >
-            <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-6">
               {/* Icon Circle */}
               <div
                 className={cn(
-                  "flex size-10 shrink-0 items-center justify-center rounded-full sm:size-12",
+                  "flex size-12 shrink-0 items-center justify-center rounded-full",
                   mod.completed ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
                 )}
               >
                 {mod.completed ? (
-                  <Check className="size-5 sm:size-6" strokeWidth={3} />
+                  <Check className="size-6" strokeWidth={3} />
                 ) : (
-                  <span className="text-lg font-bold sm:text-xl">{mod.id}</span>
+                  <Clock10 className="size-6" strokeWidth={3} />
                 )}
               </div>
               
               {/* Text content */}
-              <div>
-                <h3 className="text-base font-semibold sm:text-lg">{mod.title}</h3>
-                <p className="text-sm text-muted-foreground">{mod.lessons} lessons</p>
+              <div className="text-left">
+                <h3 className="text-[17px] font-medium">{mod.title}</h3>
+                <p className="text-[13px] text-muted-foreground">{mod.lessons} lessons</p>
               </div>
             </div>
             
             {/* Arrow */}
             <div className="text-primary">
-              <ArrowRight className="size-5 sm:size-6" />
+              <ArrowRight className="size-6" />
             </div>
           </Card>
         ))}
