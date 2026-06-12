@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getReminders, dismissReminder } from "@/api/reminders";
+import { queryKeys } from "@/lib/query-keys";
 
 export function useReminders() {
   return useQuery({
-    queryKey: ["reminders"],
+    queryKey: queryKeys.reminders.all(),
     queryFn: getReminders,
   });
 }
@@ -16,7 +17,7 @@ export function useDismissReminder() {
   return useMutation({
     mutationFn: dismissReminder,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reminders.all() });
     },
   });
 }

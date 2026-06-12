@@ -1,120 +1,48 @@
-import { CircleCheckBig, FileText } from "lucide-react";
-import { format } from "date-fns";
+import { useState } from "react";
 
 import { usePageHeader } from "@/components/page-header-context";
 import { useAssignments } from "@/hooks/use-assignments";
 import type { AssignmentStatus } from "@/api/assignments";
-import { Badge } from "@/components/ui/badge";
+import { FilterTabs } from "@/components/ui/filter-tabs";
+import { AssignmentList } from "@/components/assignments/assignment-list";
+import { AssignmentRowSkeleton } from "@/components/assignments/assignment-row";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { STATUS_CONFIG } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-
-
 
 const PENDING_STATUSES: AssignmentStatus[] = [
   "upcoming",
-  "due_soon",
-  "due_tomorrow",
-  "overdue",
 ];
 
-// ─── Skeletons ────────────────────────────────────────────────────────────────
+const TABS = [
+  { id: "all", label: "All" },
+  { id: "pending", label: "Pending" },
+  { id: "submitted", label: "Submitted" },
+  { id: "graded", label: "Graded" },
+] as const;
 
-function TableSkeleton() {
+function AssignmentsSkeleton() {
   return (
-    <>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <TableRow key={i}>
-          <TableCell>
-            <div className="space-y-1.5">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-28" />
+    <div className="space-y-10">
+      <div className="space-y-4">
+        <div className="h-5 w-24 rounded bg-muted animate-pulse" />
+        <Card className="shadow-xs border border-border/50 p-0">
+          <CardContent className="p-0 divide-y divide-border/50">
+            <div className="p-4 sm:px-6">
+              <AssignmentRowSkeleton count={4} />
             </div>
-          </TableCell>
-          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-          <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-        </TableRow>
-      ))}
-    </>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
-
-// ─── Assignment table ─────────────────────────────────────────────────────────
-
-type AssignmentTableProps = {
-  assignments: NonNullable<ReturnType<typeof useAssignments>["data"]>;
-  emptyMessage: string;
-};
-
-function AssignmentTable({ assignments, emptyMessage }: AssignmentTableProps) {
-  if (!assignments.length) {
-    return (
-      <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>
-    );
-  }
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Assignment</TableHead>
-          <TableHead>Due Date</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {assignments.map((a) => {
-          const config = STATUS_CONFIG[a.status];
-          const isSubmitted = a.status === "submitted" || a.status === "graded";
-          const Icon = isSubmitted ? CircleCheckBig : FileText;
-
-          return (
-            <TableRow key={a.id}>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="size-4" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{a.title}</p>
-                    <p className="text-xs text-muted-foreground">{a.courseName}</p>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {format(new Date(a.dueDate), "MMM d, yyyy")}
-              </TableCell>
-              <TableCell>
-                <Badge className={cn("rounded-full px-2.5 py-1 text-xs", config.className)}>
-                  {config.label}
-                </Badge>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Assignments() {
   usePageHeader({
     title: "Assignments",
-    description: "Track and manage your upcoming work.",
+    description: "All courses · Fall Semester 2024",
   });
 
+  const [activeTab, setActiveTab] = useState<string>("all");
   const { data, isLoading, error } = useAssignments();
 
   // Sort by due date ascending (most urgent first).
@@ -122,56 +50,33 @@ export default function Assignments() {
     (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
   );
 
-  const pending   = sorted.filter((a) => PENDING_STATUSES.includes(a.status));
-  const submitted = sorted.filter((a) => !PENDING_STATUSES.includes(a.status));
+  const filtered = sorted.filter((a) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "pending") return PENDING_STATUSES.includes(a.status);
+    if (activeTab === "submitted") return a.status === "submitted";
+    if (activeTab === "graded") return a.status === "graded";
+    return true;
+  });
 
   return (
-    <Tabs defaultValue="all">
-      <TabsList className="mb-4">
-        <TabsTrigger value="all">All</TabsTrigger>
-        <TabsTrigger value="pending">
-          Pending
-          {pending.length > 0 && (
-            <Badge className="ml-1.5 rounded-full px-1.5 py-0 text-[10px] bg-rose-500/10 text-rose-500">
-              {pending.length}
-            </Badge>
-          )}
-        </TabsTrigger>
-        <TabsTrigger value="submitted">Submitted</TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      {/* Pill Tabs */}
+      <FilterTabs
+        tabs={TABS}
+        activeTab={activeTab as any}
+        onTabChange={setActiveTab}
+      />
 
-      <Card className="p-0 py-0 shadow-xs">
-        <CardContent className="px-0 py-0">
-          {isLoading ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Assignment</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody><TableSkeleton /></TableBody>
-            </Table>
-          ) : error ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Failed to load assignments. Please try again.
-            </p>
-          ) : (
-            <>
-              <TabsContent value="all" className="mt-0">
-                <AssignmentTable assignments={sorted} emptyMessage="No assignments found." />
-              </TabsContent>
-              <TabsContent value="pending" className="mt-0">
-                <AssignmentTable assignments={pending} emptyMessage="No pending assignments." />
-              </TabsContent>
-              <TabsContent value="submitted" className="mt-0">
-                <AssignmentTable assignments={submitted} emptyMessage="No submitted assignments yet." />
-              </TabsContent>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </Tabs>
+      {/* List / Loading / Error */}
+      {isLoading ? (
+        <AssignmentsSkeleton />
+      ) : error ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          Failed to load assignments. Please try again.
+        </p>
+      ) : (
+        <AssignmentList assignments={filtered} emptyMessage="No assignments found for this filter." />
+      )}
+    </div>
   );
 }

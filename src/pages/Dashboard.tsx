@@ -11,8 +11,8 @@ import { useGrades } from "@/hooks/use-grades";
 import { useReminders } from "@/hooks/use-reminders";
 
 import { usePageHeader } from "@/components/page-header-context";
-import { CourseCard, CourseCardSkeleton, mapCourse } from "@/components/course-card";
-import { AssignmentRow, AssignmentRowSkeleton, mapAssignment } from "@/components/assignment-row";
+import { CourseCard, CourseCardSkeleton, mapCourse } from "@/components/courses/course-card";
+import { AssignmentRow, AssignmentRowSkeleton, mapAssignment } from "@/components/assignments/assignment-row";
 import { GradeRow, GradeRowSkeleton, mapGrade } from "@/components/grade-row";
 import { ReminderCard, ReminderCardSkeleton, mapReminder } from "@/components/reminder-card";
 import { SectionCardHeader } from "@/components/section-card-header";

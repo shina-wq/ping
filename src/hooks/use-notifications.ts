@@ -5,10 +5,11 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from "@/api/notifications";
+import { queryKeys } from "@/lib/query-keys";
 
 export function useNotifications() {
   return useQuery({
-    queryKey: ["notifications"],
+    queryKey: queryKeys.notifications.all(),
     queryFn: getNotifications,
   });
 }
@@ -20,7 +21,7 @@ export function useMarkNotificationRead() {
   return useMutation({
     mutationFn: markNotificationRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all() });
     },
   });
 }
@@ -32,7 +33,7 @@ export function useMarkAllNotificationsRead() {
   return useMutation({
     mutationFn: markAllNotificationsRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all() });
     },
   });
 }

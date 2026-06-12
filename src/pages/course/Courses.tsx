@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { usePageHeader } from "@/components/page-header-context";
 import { useCourses } from "@/hooks/use-courses";
-import { CourseCard, CourseCardSkeleton, mapCourse } from "@/components/course-card";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { CourseCard, CourseCardSkeleton, mapCourse } from "@/components/courses/course-card";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 
 type CourseFilter = "All Courses" | "In Progress" | "Completed" | "Not Started";
 const TABS: CourseFilter[] = ["All Courses", "In Progress", "Completed", "Not Started"];
@@ -31,13 +30,7 @@ export default function Courses() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex flex-wrap gap-2">
-          {TABS.map((tab) => (
-            <Button key={tab} variant="outline" className="rounded-full opacity-50" disabled>
-              {tab}
-            </Button>
-          ))}
-        </div>
+        <FilterTabs tabs={TABS} activeTab={filter} onTabChange={() => {}} className="opacity-50 pointer-events-none" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <CourseCardSkeleton count={6} />
         </div>
@@ -63,21 +56,7 @@ export default function Courses() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {TABS.map((tab) => (
-          <Button
-            key={tab}
-            variant={filter === tab ? "default" : "outline"}
-            className={cn(
-              "rounded-full",
-              filter !== tab && "text-muted-foreground"
-            )}
-            onClick={() => setFilter(tab)}
-          >
-            {tab}
-          </Button>
-        ))}
-      </div>
+      <FilterTabs tabs={TABS} activeTab={filter} onTabChange={setFilter} />
 
       {!filteredCourses.length ? (
         <p className="py-12 text-center text-sm text-muted-foreground">

@@ -19,18 +19,12 @@ export type AssignmentRow = {
 
 type DisplayStatus =
   | "upcoming"
-  | "due_soon"
-  | "due_today"
-  | "due_tomorrow"
   | "overdue"
   | "submitted"
   | "graded";
 
 const STATUS_CONFIG: Record<DisplayStatus, { label: string; className: string }> = {
   upcoming: { label: "Upcoming", className: "bg-sky-500/10 text-sky-500" },
-  due_soon: { label: "Due Soon", className: "bg-primary/10 text-primary" },
-  due_today: { label: "Due Today", className: "bg-orange-500/10 text-orange-500" },
-  due_tomorrow: { label: "Due Tomorrow", className: "bg-rose-500/10 text-rose-500" },
   overdue: { label: "Overdue", className: "bg-red-600/10 text-red-600" },
   submitted: { label: "Submitted", className: "bg-emerald-500/10 text-emerald-600" },
   graded: { label: "Graded", className: "bg-emerald-500/10 text-emerald-600" },
@@ -44,9 +38,6 @@ function getDisplayStatus(status: AssignmentStatus, dueDate: string): DisplaySta
   const daysUntilDue = differenceInCalendarDays(new Date(dueDate), new Date());
 
   if (daysUntilDue < 0)  return "overdue";
-  if (daysUntilDue === 0) return "due_today";
-  if (daysUntilDue === 1) return "due_tomorrow";
-  if (daysUntilDue <= 3) return "due_soon";
   return "upcoming";
 }
 
@@ -71,7 +62,7 @@ export function AssignmentRow({ title, course, due, status, statusClass, isSubmi
   const Icon = isSubmitted ? CircleCheckBig : FileText;
 
   return (
-    <div className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+    <div className="flex items-center gap-3">
       <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="size-4" />
       </div>
@@ -96,7 +87,7 @@ export function AssignmentRowSkeleton({ count = 4 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+        <div key={i} className="flex items-center gap-3">
           <Skeleton className="size-10 shrink-0 rounded-xl" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-36" />

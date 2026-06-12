@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { getNotificationCount } from "@/api/notifications";
+import { queryKeys } from "@/lib/query-keys";
 
 /**
  * Returns the unread notification count for the AppHeader badge.
@@ -10,7 +11,7 @@ import { getNotificationCount } from "@/api/notifications";
 
 export function useNotificationCount(): number {
   const { data = 0 } = useQuery({
-    queryKey: ["notifications", "count"],
+    queryKey: queryKeys.notifications.count(),
     queryFn: getNotificationCount,
     refetchInterval: 60_000,
   });

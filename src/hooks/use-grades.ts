@@ -1,17 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { getGrades, getGrade } from "@/api/grades";
+import { queryKeys } from "@/lib/query-keys";
 
 export function useGrades() {
   return useQuery({
-    queryKey: ["grades"],
+    queryKey: queryKeys.grades.all(),
     queryFn: getGrades,
   });
 }
 
 export function useGrade(id: string) {
   return useQuery({
-    queryKey: ["grades", id],
+    queryKey: queryKeys.grades.detail(id),
     queryFn: () => getGrade(id),
     enabled: !!id,
   });
