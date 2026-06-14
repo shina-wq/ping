@@ -72,7 +72,7 @@ export default function Assignments() {
         <AssignmentsSkeleton />
       ) : error ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          Failed to load assignments. Please try again.
+        {error.message}
         </p>
       ) : (
         <AssignmentList assignments={filtered} emptyMessage="No assignments found for this filter." />
