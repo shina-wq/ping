@@ -5,7 +5,7 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
-import Courses from "@/pages/course/Courses";
+import Courses from "@/pages/courses/Courses";
 import Assignments from "@/pages/Assignments";
 import Grades from "@/pages/Grades";
 import Reminders from "@/pages/Reminders";
@@ -14,10 +14,11 @@ import Settings from "@/pages/Settings";
 
 // Course details pages
 import CourseLayout from "@/layouts/CourseLayout";
-import CourseModules from "@/pages/course/CourseModules";
-import CourseAssignments from "@/pages/course/CourseAssignments";
-import CourseGrades from "@/pages/course/CourseGrades";
-import CourseAnnouncements from "@/pages/course/CourseAnnouncements";
+import CourseModules from "@/pages/courses/CourseModules";
+import CourseAssignments from "@/pages/courses/CourseAssignments";
+import CourseGrades from "@/pages/courses/CourseGrades";
+import CourseAnnouncements from "@/pages/courses/CourseAnnouncements";
+import CourseModuleDetail from "@/pages/courses/CourseModuleDetail";
 
 export const router = createBrowserRouter([
   {
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
                 children: [
                   { index: true, element: <Navigate to="modules" replace /> },
                   { path: "modules", element: <CourseModules /> },
+                  { path: "modules/:moduleId", element: <CourseModuleDetail /> },
                   { path: "assignments", element: <CourseAssignments /> },
                   { path: "grades", element: <CourseGrades /> },
                   { path: "announcements", element: <CourseAnnouncements /> },
