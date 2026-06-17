@@ -25,7 +25,6 @@ const COURSE_ACCENTS = [
   "bg-orange-500",
 ];
 
-// Mapper
 export function mapCourse(course: Course, index: number): CourseCard {
   return {
     id: course.id,
@@ -71,7 +70,7 @@ export function CourseCard({ id, title, instructor, progress, accent }: CourseCa
 }
 
 // Skeleton
-export function CourseCardSkeleton({ count = 2 }: { count?: number }) {
+export function CourseCardSkeleton({ count = 4 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
@@ -95,6 +94,65 @@ export function CourseCardSkeleton({ count = 2 }: { count?: number }) {
             <Skeleton className="h-4 w-24" />
           </div>
         </Card>
+      ))}
+    </>
+  );
+}
+
+// List view
+export function CourseListItem({id, title, instructor, progress, accent}: CourseCard) {
+  return (
+    <div className="flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-3.5 shadow-xs transition-colors hover:bg-muted/30">
+      {/* Accent dot */}
+      <div className={cn("size-2.5 shrink-0 rounded-full", accent)} />
+        {/* Title + instructor */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground">
+            {title}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {instructor}
+          </p>
+        </div>
+
+        {/* Progress (hidden on mobile) */}
+        <div className="hidden w-40 items-center gap-3 sm:flex">
+          <Progress value={progress} className="h-1.5 flex-1"/>
+          <span className="w-9 text-right text-xs font-medium text-foreground">
+            {progress}%
+          </span>
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="shrink-0 gap-1.5 text-primary hover:text-primary"
+          asChild
+        >
+          <Link to={`/courses/${id}`}>
+            Open <ArrowUpRight className="size-3.5"/>
+          </Link>
+        </Button>
+      </div>
+  );
+}
+
+export function CourseListItemSkeleton({count = 6}: {count?: number}) {
+  return (
+    <>
+      {Array.from({length: count}).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-4 rounded-xl border-border bg-card px-5 py-3.5 shadow-xs"
+        >
+          <Skeleton className="size-2.5 shrink-0 rounded-full"/>
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-40"/>
+            <Skeleton className="h-3 w-24"/>
+          </div>
+          <Skeleton  className="hidden h-1.5 w-40 sm:block"/>
+          <Skeleton className="h-8 w-16 rounded-md"/>
+        </div>
       ))}
     </>
   );

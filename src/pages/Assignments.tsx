@@ -1,40 +1,28 @@
 import { useState } from "react";
 
-import { usePageHeader } from "@/components/page-header-context";
-import { useAssignments } from "@/hooks/use-assignments";
 import type { AssignmentStatus } from "@/api/assignments";
-import { FilterTabs } from "@/components/ui/filter-tabs";
+import { useAssignments } from "@/hooks/use-assignments";
+import { usePageHeader } from "@/components/page-header-context";
 import { AssignmentList } from "@/components/assignments/assignment-list";
-import { AssignmentRowSkeleton } from "@/components/assignments/assignment-row";
+import {
+  AssignmentRow,
+  AssignmentRowSkeleton,
+  mapAssignment,
+} from "@/components/assignments/assignment-row";
+import { FilterTabs } from "@/components/ui/filter-tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 
-const PENDING_STATUSES: AssignmentStatus[] = [
-  "upcoming",
-];
+const PENDING_STATUSES: AssignmentStatus[] = ["upcoming"];
 
 const TABS = [
-  { id: "all", label: "All" },
-  { id: "pending", label: "Pending" },
+  { id: "all",       label: "All" },
+  { id: "pending",   label: "Pending" },
   { id: "submitted", label: "Submitted" },
-  { id: "graded", label: "Graded" },
+  { id: "graded",    label: "Graded" },
 ] as const;
 
-function AssignmentsSkeleton() {
-  return (
-    <div className="space-y-10">
-      <div className="space-y-4">
-        <div className="h-5 w-24 rounded bg-muted animate-pulse" />
-        <Card className="shadow-xs border border-border/50 p-0">
-          <CardContent className="p-0 divide-y divide-border/50">
-            <div className="p-4 sm:px-6">
-              <AssignmentRowSkeleton count={4} />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
+type TabId = (typeof TABS)[number]["id"];
 
 export default function Assignments() {
   usePageHeader({
@@ -42,40 +30,66 @@ export default function Assignments() {
     description: "All courses · Fall Semester 2024",
   });
 
-  const [activeTab, setActiveTab] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<TabId>("all");
+  const [view, setView] = useState<ViewMode>("card");
   const { data, isLoading, error } = useAssignments();
 
-  // Sort by due date ascending (most urgent first).
-  const sorted = [...(data ?? [])].sort(
-    (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-  );
-
-  const filtered = sorted.filter((a) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "pending") return PENDING_STATUSES.includes(a.status);
-    if (activeTab === "submitted") return a.status === "submitted";
-    if (activeTab === "graded") return a.status === "graded";
-    return true;
-  });
+  const filtered = [...(data ?? [])]
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .filter((a) => {
+      if (activeTab === "all")       return true;
+      if (activeTab === "pending")   return PENDING_STATUSES.includes(a.status);
+      if (activeTab === "submitted") return a.status === "submitted";
+      if (activeTab === "graded")    return a.status === "graded";
+      return true;
+    });
 
   return (
     <div className="space-y-6">
-      {/* Pill Tabs */}
-      <FilterTabs
-        tabs={TABS}
-        activeTab={activeTab as any}
-        onTabChange={setActiveTab}
-      />
+      {/* Controls row */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <FilterTabs
+          tabs={TABS}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as TabId)}
+          className={isLoading ? "pointer-events-none opacity-50" : undefined}
+        />
+        <ViewToggle view={view} onChange={setView} />
+      </div>
 
-      {/* List / Loading / Error */}
+      {/* Content */}
       {isLoading ? (
-        <AssignmentsSkeleton />
+        <Card className="shadow-xs p-0">
+          <CardContent className="divide-y p-0">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="p-4 sm:px-6">
+                <AssignmentRowSkeleton count={1} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       ) : error ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">{error.message}</p>
+      ) : view === "card" ? (
+        <AssignmentList
+          assignments={filtered}
+          emptyMessage="No assignments found for this filter."
+        />
+      ) : filtered.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-        {error.message}
+          No assignments found for this filter.
         </p>
       ) : (
-        <AssignmentList assignments={filtered} emptyMessage="No assignments found for this filter." />
+        // List view
+        <Card className="p-0 shadow-xs">
+          <CardContent className="divide-y divide-border/60 p-0">
+            {filtered.map((a) => (
+              <div key={a.id} className="px-4 py-3 sm:px-6">
+                <AssignmentRow {...mapAssignment(a)} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
     </div>
   );
