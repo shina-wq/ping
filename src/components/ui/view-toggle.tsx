@@ -22,7 +22,7 @@ export function ViewToggle({ view, onChange, className }: Props) {
       {OPTIONS.map(({ value, Icon, label }) => (
         <Button
           key={value}
-          variant={view === value ? "secondary" : "ghost"}
+          variant={view === value ? "active" : "ghost"}
           size="icon-sm"
           aria-label={label}
           aria-pressed={view === value}

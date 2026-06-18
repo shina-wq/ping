@@ -5,6 +5,7 @@ import { useAssignments } from "@/hooks/use-assignments";
 import { usePageHeader } from "@/components/page-header-context";
 import { AssignmentList } from "@/components/assignments/assignment-list";
 import {
+  AssignmentCardSkeleton,
   AssignmentRow,
   AssignmentRowSkeleton,
   mapAssignment,
@@ -59,6 +60,11 @@ export default function Assignments() {
 
       {/* Content */}
       {isLoading ? (
+        view === "card" ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <AssignmentCardSkeleton count={6}/>
+          </div>
+        ) : (
         <Card className="shadow-xs p-0">
           <CardContent className="divide-y p-0">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -68,6 +74,7 @@ export default function Assignments() {
             ))}
           </CardContent>
         </Card>
+        )
       ) : error ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{error.message}</p>
       ) : view === "card" ? (

@@ -16,6 +16,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer",
         ghost:
           "hover:bg-muted hover:text-foreground cursor-pointer",
+        active:
+          "bg-primary/15 text-primary hover:bg-primary/25 cursor-pointer",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer",
         link: "text-primary underline-offset-4 hover:underline cursor-pointer",

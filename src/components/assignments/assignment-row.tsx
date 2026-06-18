@@ -1,9 +1,10 @@
-import { CircleCheckBig, FileText } from "lucide-react";
+import { CircleCheckBig, FileText, ArrowUpRight } from "lucide-react";
 import { differenceInCalendarDays, format } from "date-fns";
 
 import type { Assignment, AssignmentStatus } from "@/api/assignments";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {Card} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 // Types
@@ -79,6 +80,66 @@ export function AssignmentRow({ title, course, due, status, statusClass, isSubmi
         </Badge>
       </div>
     </div>
+  );
+}
+
+export function AssignmentCard({id, title, course, due, status, statusClass, isSubmitted}: AssignmentRow) {
+  const Icon = isSubmitted ? CircleCheckBig : FileText;
+
+  return (
+    <Card className="min-w-0 overflow-hidden p-0 shadow-xs">
+      <div className="flex flex-col gap-4 p-4 sm:p-5">
+        {/* Header (icon + status) */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon className="size-5"/>
+          </div>
+          <Badge className={cn("rounded-full px-2.5 py-1 text-xs", statusClass)}>
+            {status}
+          </Badge>
+        </div>
+
+        {/* Title + course */}
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground leading-snug">
+            {title}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {course}
+          </p>
+        </div>
+
+        {/* Footer: due date */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+              Due <span className="font-medium text-foreground">{due}</span>
+          </span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export function AssignmentCardSkeleton({count = 6}: {count?:number}) {
+  return (
+    <>
+    {Array.from({length: count}).map((_, i) => (
+      <Card key={i} className="min-w-0 overflow-hidden p-0 shadow-xs">
+        <div className="flex flex-col gap-4 p-4 sm:p-5">
+          <div className="flex items-start justify-between">
+            <Skeleton className="size-10 rounded-xl"/>
+            <Skeleton className="h-6 w-20 rounded-full"/>
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-36"/>
+            <Skeleton className="h-3 w-24"/>
+          </div>
+          <Skeleton  className="h-3 w-20"/>
+        </div>
+      </Card>
+    ))}
+      
+      </>
   );
 }
 

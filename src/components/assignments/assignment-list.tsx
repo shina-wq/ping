@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 
-import { AssignmentRow } from "@/components/assignments/assignment-row";
+import { AssignmentRow, AssignmentCard } from "@/components/assignments/assignment-row";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { STATUS_CONFIG } from "@/lib/constants";
@@ -38,27 +38,24 @@ export function AssignmentList({ assignments, emptyMessage = "No assignments fou
             {group.length}
           </Badge>
         </div>
-        <Card className="shadow-xs border border-border/50 p-0">
-          <CardContent className="p-0 divide-y divide-border/50">
-            {group.map((a) => {
-              const config = STATUS_CONFIG[a.status];
-
-              return (
-                <div key={a.id} className="p-4 sm:px-6">
-                  <AssignmentRow
-                    id={a.id}
-                    title={a.title}
-                    course={a.courseName}
-                    due={format(new Date(a.dueDate), "MMM d")}
-                    status={config.label}
-                    statusClass={config.className}
-                    isSubmitted={a.status === "submitted" || a.status === "graded"}
-                  />
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+        
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {group.map((a) => {
+            const config = STATUS_CONFIG[a.status];
+            return (
+              <AssignmentCard 
+                key={a.id}
+                id={a.id}
+                title={a.title}
+                course={a.courseName}
+                due={format(new Date(a.dueDate), "MMM d")}
+                status={config.label}
+                statusClass={config.className}
+                isSubmitted={a.status === "submitted" || a.status === "graded"}
+              />
+            );
+          })}
+        </div>
       </div>
     );
   };
