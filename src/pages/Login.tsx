@@ -103,7 +103,7 @@ export default function Login() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="**********"
+                  placeholder="••••••••••"
                   autoComplete="current-password"
                   className="pr-10"
                   {...register("password")}

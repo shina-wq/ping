@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Courses from "@/pages/courses/Courses";
-import Assignments from "@/pages/Assignments";
+import Assignments from "@/pages/assignments/Assignments";
 import Grades from "@/pages/Grades";
 import Reminders from "@/pages/Reminders";
 import Notifications from "@/pages/Notifications";
@@ -19,6 +19,9 @@ import CourseAssignments from "@/pages/courses/CourseAssignments";
 import CourseGrades from "@/pages/courses/CourseGrades";
 import CourseAnnouncements from "@/pages/courses/CourseAnnouncements";
 import CourseModuleDetail from "@/pages/courses/CourseModuleDetail";
+
+// Assignment Detail
+import AssignmentDetail from "./pages/assignments/assignment-detail";
 
 export const router = createBrowserRouter([
   {
@@ -55,6 +58,7 @@ export const router = createBrowserRouter([
                 ],
               },
               { path: "/assignments", element: <Assignments /> },
+              {path: "/assignments/:assignmentId", element: <AssignmentDetail />},
               { path: "/grades", element: <Grades /> },
               { path: "/reminders", element: <Reminders /> },
               { path: "/notifications", element: <Notifications /> },

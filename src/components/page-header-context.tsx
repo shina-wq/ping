@@ -55,7 +55,7 @@ export function PageHeaderSlot() {
   const routeHeader = usePageHeaderFromRoute();
   const header = override ?? routeHeader;
 
-  if (!header) return null;
+  if (!header || !header.title) return null;
 
   return <AppHeader title={header.title} description={header.description} />;
 }

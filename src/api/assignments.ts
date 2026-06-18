@@ -6,13 +6,24 @@ export type AssignmentStatus =
   | "submitted"
   | "graded";
 
+export type RubricCriterion = {
+  criterion: string;
+  points: number;
+}
+
 export type Assignment = {
   id: string;
   title: string;
   courseId: string;
   courseName: string;
-  dueDate: string; // ISO 8601
+  instructor: string;        // ADD to backend
+  dueDate: string;
   status: AssignmentStatus;
+  points: number;            // ADD to backend
+  submissionType: string;    // e.g. "File upload" - ADD to backend
+  description?: string;      // ADD to backend
+  gradingRubric?: RubricCriterion[]; // ADD to backend
+  reminderNote?: string; 
 };
 
 export type CreateAssignmentInput = {

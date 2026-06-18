@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { CircleCheckBig, FileText, ArrowUpRight } from "lucide-react";
 import { differenceInCalendarDays, format } from "date-fns";
 
@@ -87,6 +88,7 @@ export function AssignmentCard({id, title, course, due, status, statusClass, isS
   const Icon = isSubmitted ? CircleCheckBig : FileText;
 
   return (
+    <Link to={`/assignments/${id}`} className="block">
     <Card className="min-w-0 overflow-hidden p-0 shadow-xs">
       <div className="flex flex-col gap-4 p-4 sm:p-5">
         {/* Header (icon + status) */}
@@ -117,6 +119,7 @@ export function AssignmentCard({id, title, course, due, status, statusClass, isS
         </div>
       </div>
     </Card>
+    </Link>
   );
 }
 
