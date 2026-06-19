@@ -91,9 +91,9 @@ export default function AssignmentDetail() {
     }
 
     const dueFormatted = format(new Date(assignment.dueDate), "MMM d, yyyy 'at' h:mm a");
-    const statusKey = (assignment.status === "upcoming" ? "upcoming" : assignment.status) as DisplayStatus;
-    const statusCfg = STATUS_CONFIG[statusKey];
-    const isSubmittable = assignment.status === "upcoming";
+    const statusKey = assignment.status as DisplayStatus;
+    const statusCfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.upcoming;
+    const isSubmittable = assignment.status === "upcoming" || assignment.status === "overdue";
 
     function handleSubmitClick() {
         setShowSubmit(true);

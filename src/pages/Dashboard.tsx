@@ -94,7 +94,11 @@ export default function Dashboard() {
 
   const stats = statsData ? mapStats(statsData) : [];
   const courses = coursesData ? coursesData.map(mapCourse) : [];
-  const assignments = assignmentsData ? assignmentsData.map(mapAssignment) : [];
+  const assignments = assignmentsData
+    ? assignmentsData
+        .filter((a) => a.status === "upcoming" || a.status === "overdue")
+        .map(mapAssignment)
+    : [];
   const grades = gradesData ? gradesData.map(mapGrade) : [];
   const reminders = remindersData ? remindersData.map(mapReminder) : [];
 

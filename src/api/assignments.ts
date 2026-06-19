@@ -3,6 +3,7 @@ import { apiClient } from "@/api/client";
 // Types
 export type AssignmentStatus =
   | "upcoming"
+  | "overdue"
   | "submitted"
   | "graded";
 

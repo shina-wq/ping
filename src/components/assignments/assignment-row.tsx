@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { CircleCheckBig, FileText, ArrowUpRight } from "lucide-react";
-import { differenceInCalendarDays, format } from "date-fns";
+import { format } from "date-fns";
 
 import type { Assignment, AssignmentStatus } from "@/api/assignments";
 import { Badge } from "@/components/ui/badge";
@@ -32,21 +32,9 @@ const STATUS_CONFIG: Record<DisplayStatus, { label: string; className: string }>
   graded: { label: "Graded", className: "bg-emerald-500/10 text-emerald-600" },
 };
 
-// Helpers
-function getDisplayStatus(status: AssignmentStatus, dueDate: string): DisplayStatus {
-  // Submitted and graded statuses take precedence over date logic.
-  if (status !== "upcoming") return status;
-
-  const daysUntilDue = differenceInCalendarDays(new Date(dueDate), new Date());
-
-  if (daysUntilDue < 0)  return "overdue";
-  return "upcoming";
-}
-
 // Mapper
 export function mapAssignment(a: Assignment): AssignmentRow {
-  const displayStatus = getDisplayStatus(a.status, a.dueDate);
-  const config = STATUS_CONFIG[displayStatus];
+  const config = STATUS_CONFIG[a.status as DisplayStatus] || STATUS_CONFIG.upcoming;
 
   return {
     id: a.id,

@@ -14,7 +14,7 @@ import { FilterTabs } from "@/components/ui/filter-tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 
-const PENDING_STATUSES: AssignmentStatus[] = ["upcoming"];
+const PENDING_STATUSES: AssignmentStatus[] = ["upcoming", "overdue"];
 
 const TABS = [
   { id: "all",       label: "All" },
@@ -77,26 +77,12 @@ export default function Assignments() {
         )
       ) : error ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{error.message}</p>
-      ) : view === "card" ? (
+      ) : (
         <AssignmentList
           assignments={filtered}
+          view={view}
           emptyMessage="No assignments found for this filter."
         />
-      ) : filtered.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          No assignments found for this filter.
-        </p>
-      ) : (
-        // List view
-        <Card className="p-0 shadow-xs">
-          <CardContent className="divide-y divide-border/60 p-0">
-            {filtered.map((a) => (
-              <div key={a.id} className="px-4 py-3 sm:px-6">
-                <AssignmentRow {...mapAssignment(a)} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
       )}
     </div>
   );
