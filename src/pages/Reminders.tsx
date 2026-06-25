@@ -1,4 +1,5 @@
 import { Clock3, FileText, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 import { usePageHeader } from "@/components/page-header-context";
 import { useReminders, useDismissReminder } from "@/hooks/use-reminders";
@@ -30,6 +31,12 @@ export default function Reminders() {
 
   const { data: reminders, isLoading, error } = useReminders();
   const dismiss = useDismissReminder();
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q")?.toLowerCase() || "";
+
+  const filteredReminders = (reminders || []).filter(r =>
+    r.title.toLowerCase().includes(query) || r.detail.toLowerCase().includes(query)
+  );
 
   if (isLoading) {
     return <div className="space-y-3"><RemindersSkeleton /></div>;
@@ -43,7 +50,7 @@ export default function Reminders() {
     );
   }
 
-  if (!reminders?.length) {
+  if (!filteredReminders?.length) {
     return (
       <p className="py-12 text-center text-sm text-muted-foreground">
         No active reminders — you're on top of everything!
@@ -53,7 +60,7 @@ export default function Reminders() {
 
   return (
     <div className="space-y-3">
-      {reminders.map((reminder) => {
+      {filteredReminders.map((reminder) => {
         const Icon = reminder.isUrgent ? Clock3 : FileText;
         const accent = reminder.isUrgent
           ? "bg-primary text-primary-foreground"

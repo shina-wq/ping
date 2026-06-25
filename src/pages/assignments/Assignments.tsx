@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import type { AssignmentStatus } from "@/api/assignments";
 import { useAssignments } from "@/hooks/use-assignments";
@@ -34,10 +35,15 @@ export default function Assignments() {
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [view, setView] = useState<ViewMode>("card");
   const { data, isLoading, error } = useAssignments();
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q")?.toLowerCase() || "";
 
   const filtered = [...(data ?? [])]
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .filter((a) => {
+      const matchesSearch = a.title.toLowerCase().includes(query) || a.courseName?.toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+
       if (activeTab === "all")       return true;
       if (activeTab === "pending")   return PENDING_STATUSES.includes(a.status);
       if (activeTab === "submitted") return a.status === "submitted";

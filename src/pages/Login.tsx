@@ -29,6 +29,7 @@ export default function Login() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -55,16 +56,25 @@ export default function Login() {
       await login(data);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      // ApiError carries the server's message; fall back for unexpected errors.
       const message =
         err instanceof ApiError
           ? err.message
           : "Something went wrong. Please try again.";
-      toast.error(message);
+
+      // Route credential / auth errors inline so the fields turn red too.
+      // For server/network errors fall back to a toast.
+      if (err instanceof ApiError && (err.isUnauthorized || err.status === 400)) {
+        setError("root", { message });
+      } else {
+        toast.error(message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
+  // A field has a server-level credential error when errors.root is set.
+  const hasRootError = !!errors.root;
 
   return (
     <div className="flex min-h-dvh overflow-hidden">
@@ -81,6 +91,13 @@ export default function Login() {
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            {/* Root / credential error banner */}
+            {errors.root && (
+              <p role="alert" className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
+                {errors.root.message}
+              </p>
+            )}
+
             {/* Email */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email Address</Label>
@@ -89,6 +106,7 @@ export default function Login() {
                 type="text"
                 placeholder="johndoe@example.com"
                 autoComplete="email"
+                aria-invalid={!!errors.email || hasRootError}
                 {...register("email")}
               />
               {errors.email && (
@@ -106,6 +124,7 @@ export default function Login() {
                   placeholder="••••••••••"
                   autoComplete="current-password"
                   className="pr-10"
+                  aria-invalid={!!errors.password || hasRootError}
                   {...register("password")}
                 />
                 <button

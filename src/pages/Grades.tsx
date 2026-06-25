@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useSearchParams } from "react-router-dom";
 
 import { usePageHeader } from "@/components/page-header-context";
 import { useGrades } from "@/hooks/use-grades";
@@ -42,12 +43,18 @@ export default function Grades() {
   });
 
   const { data: grades, isLoading, error } = useGrades();
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q")?.toLowerCase() || "";
 
-  // Compute overall average from all grades.
+  const filteredGrades = (grades || []).filter(g => 
+    g.title.toLowerCase().includes(query) || g.courseName?.toLowerCase().includes(query)
+  );
+
+  // Compute overall average from all filtered grades.
   const average =
-    grades?.length
+    filteredGrades?.length
       ? Math.round(
-          grades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) / grades.length
+          filteredGrades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) / filteredGrades.length
         )
       : null;
 
@@ -96,14 +103,14 @@ export default function Grades() {
                     Failed to load grades. Please try again.
                   </TableCell>
                 </TableRow>
-              ) : !grades?.length ? (
+              ) : !filteredGrades?.length ? (
                 <TableRow>
                   <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
                     No grades recorded yet.
                   </TableCell>
                 </TableRow>
               ) : (
-                grades.map((grade) => {
+                filteredGrades.map((grade) => {
                   const pct = Math.round((grade.score / grade.maxScore) * 100);
                   const scoreClass = getScoreClass(grade.score, grade.maxScore);
                   return (

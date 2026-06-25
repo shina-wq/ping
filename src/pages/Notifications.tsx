@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useSearchParams } from "react-router-dom";
 
 import { usePageHeader } from "@/components/page-header-context";
 import {
@@ -37,8 +38,14 @@ export default function Notifications() {
   const { data: notifications, isLoading, error } = useNotifications();
   const markRead    = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q")?.toLowerCase() || "";
 
-  const hasUnread = notifications?.some((n) => !n.isRead) ?? false;
+  const filteredNotifications = (notifications || []).filter(n =>
+    n.title.toLowerCase().includes(query) || n.body.toLowerCase().includes(query)
+  );
+
+  const hasUnread = filteredNotifications?.some((n) => !n.isRead) ?? false;
 
   return (
     <div className="space-y-4">
@@ -64,12 +71,12 @@ export default function Notifications() {
           <p className="py-10 text-center text-sm text-muted-foreground">
             Failed to load notifications. Please try again.
           </p>
-        ) : !notifications?.length ? (
+        ) : !filteredNotifications?.length ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             You're all caught up!
           </p>
         ) : (
-          notifications.map((n) => (
+          filteredNotifications.map((n) => (
             <div
               key={n.id}
               className={cn(

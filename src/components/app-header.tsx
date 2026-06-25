@@ -1,6 +1,6 @@
 import { Bell, Search } from "lucide-react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { useNotificationCount } from "@/hooks/use-notification-count";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,18 @@ type AppHeaderProps = {
 export function AppHeader({ title, description, actions }: AppHeaderProps) {
   // Fetched internally — notification count is global state, not a page concern.
   const notificationCount = useNotificationCount();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = e.target.value;
+    if (newQuery) {
+      searchParams.set("q", newQuery);
+    } else {
+      searchParams.delete("q");
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
 
   return (
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -34,6 +46,8 @@ export function AppHeader({ title, description, actions }: AppHeaderProps) {
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search..."
+            value={query}
+            onChange={handleSearch}
             className="h-10 w-56 rounded-full border-border/70 bg-background/90 pr-4 pl-10 shadow-xs"
           />
         </div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { useCourses } from "@/hooks/use-courses";
 import { usePageHeader } from "@/components/page-header-context";
@@ -21,17 +22,22 @@ export default function Courses() {
   const { data: courses, isLoading, error } = useCourses();
   const [filter, setFilter] = useState<CourseFilter>("All Courses");
   const [view, setView] = useState<ViewMode>("card");
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q")?.toLowerCase() || "";
 
   const filteredCourses = useMemo(() => {
     if (!courses) return [];
     return courses.filter((c) => {
+      const matchesSearch = c.title.toLowerCase().includes(query) || (c.instructor || "").toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+
       if (filter === "All Courses")  return true;
       if (filter === "In Progress")  return c.progress > 0 && c.progress < 100;
       if (filter === "Completed")    return c.progress === 100;
       if (filter === "Not Started")  return c.progress === 0;
       return true;
     });
-  }, [courses, filter]);
+  }, [courses, filter, query]);
 
   const isEmpty    = !isLoading && !error && !courses?.length;
   const isNoMatch  = !isLoading && !error && courses?.length && !filteredCourses.length;
