@@ -1,10 +1,9 @@
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import type { ReactNode } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
-import { useNotificationCount } from "@/hooks/use-notification-count";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NotificationsPopover } from "./notifications-popover";
 
 type AppHeaderProps = {
   title: string;
@@ -13,8 +12,6 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ title, description, actions }: AppHeaderProps) {
-  // Fetched internally — notification count is global state, not a page concern.
-  const notificationCount = useNotificationCount();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
 
@@ -52,17 +49,7 @@ export function AppHeader({ title, description, actions }: AppHeaderProps) {
           />
         </div>
 
-        <Button variant="outline" size="icon" className="relative" asChild>
-          <Link to="/notifications">
-            <Bell className="size-4" />
-            {notificationCount > 0 ? (
-              <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                {notificationCount > 9 ? "9+" : notificationCount}
-              </span>
-            ) : null}
-            <span className="sr-only">Notifications</span>
-          </Link>
-        </Button>
+        <NotificationsPopover />
       </div>
     </header>
   );

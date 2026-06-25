@@ -8,7 +8,6 @@ import Dashboard from "@/pages/Dashboard";
 import Courses from "@/pages/courses/Courses";
 import Assignments from "@/pages/assignments/Assignments";
 import Grades from "@/pages/Grades";
-import Reminders from "@/pages/Reminders";
 import Notifications from "@/pages/Notifications";
 import Settings from "@/pages/Settings";
 
@@ -60,7 +59,6 @@ export const router = createBrowserRouter([
               { path: "/assignments", element: <Assignments /> },
               {path: "/assignments/:assignmentId", element: <AssignmentDetail />},
               { path: "/grades", element: <Grades /> },
-              { path: "/reminders", element: <Reminders /> },
               { path: "/notifications", element: <Notifications /> },
               { path: "/settings", element: <Settings /> },
             ],

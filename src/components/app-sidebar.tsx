@@ -1,6 +1,5 @@
 import {
   BookOpen,
-  Clock3,
   FileText,
   GraduationCap,
   LayoutGrid,
@@ -39,7 +38,6 @@ const navItems: NavItem[] = [
   { label: "My Courses", icon: BookOpen, href: "/courses" },
   { label: "Assignments", icon: FileText, href: "/assignments" },
   { label: "Grades", icon: GraduationCap, href: "/grades" },
-  { label: "Reminders", icon: Clock3, href: "/reminders" },
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
