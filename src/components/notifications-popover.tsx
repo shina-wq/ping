@@ -2,13 +2,13 @@ import {format} from "date-fns";
 import { Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { useNotifications, useMarkAllNotificationsRead, useMarkNotificationRead } from "@/hooks/use-notifications";
+import { useNotifications, useMarkNotificationRead } from "@/hooks/use-notifications";
 import { useNotificationCount } from "@/hooks/use-notification-count";
 import { Button } from "./ui/button";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import { Skeleton } from "./ui/skeleton";
 import {cn} from "@/lib/utils";
-import { create } from "axios";
+import { useState } from "react";
 
 // Notification item
 type NotificationItemProps = {
@@ -92,6 +92,8 @@ function NotificationsSkeleton() {
 
 // Popover
 export function NotificationsPopover() {
+  const [open, setOpen] = useState(false);
+
   const unreadCount = useNotificationCount();
   const {data: notifications, isLoading, error} = useNotifications();
   const markRead = useMarkNotificationRead();
@@ -101,7 +103,7 @@ export function NotificationsPopover() {
   const newCount = notifications?.filter((n) => !n.isRead).length ?? 0;
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <Bell className="size-4"/>
@@ -132,7 +134,7 @@ export function NotificationsPopover() {
         </div>
 
         {/* List */}
-        <div className="divide-y max-h-[420px] overflow-y-auto">
+        <div className="divide-y max-h-105 overflow-y-auto">
             {isLoading ? (
               <NotificationsSkeleton />
             ) : error ? (
@@ -156,7 +158,10 @@ export function NotificationsPopover() {
         {/* Footer */}
         <div className="border-t px-4 py-2.5">
             <Button variant="link" className="h-auto p-0 text-sm text-primary" asChild>
-              <Link to="/notifications">View all notifications →</Link>
+              <Link
+                to="/notifications"
+                onClick={() => setOpen(false)}
+              >View all notifications →</Link>
             </Button>
         </div>
       </PopoverContent>
