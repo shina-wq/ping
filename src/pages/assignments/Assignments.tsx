@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo, useState } from "react";
 
 import type { AssignmentStatus } from "@/api/assignments";
 import { useAssignments } from "@/hooks/use-assignments";
@@ -12,6 +11,7 @@ import {
   mapAssignment,
 } from "@/components/assignments/assignment-row";
 import { FilterTabs } from "@/components/ui/filter-tabs";
+import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 
@@ -32,24 +32,28 @@ export default function Assignments() {
     description: "All courses · Fall Semester 2024",
   });
 
+  const { data, isLoading, error } = useAssignments();
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [view, setView] = useState<ViewMode>("card");
-  const { data, isLoading, error } = useAssignments();
-  const [searchParams] = useSearchParams();
-  const query = searchParams.get("q")?.toLowerCase() || "";
+  const [query, setQuery] = useState("");
 
-  const filtered = [...(data ?? [])]
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-    .filter((a) => {
-      const matchesSearch = a.title.toLowerCase().includes(query) || a.courseName?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase();
 
-      if (activeTab === "all")       return true;
-      if (activeTab === "pending")   return PENDING_STATUSES.includes(a.status);
-      if (activeTab === "submitted") return a.status === "submitted";
-      if (activeTab === "graded")    return a.status === "graded";
-      return true;
-    });
+    return [...(data ?? [])]
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .filter((a) => {
+        const matchesSearch =
+          a.title.toLowerCase().includes(q) ||
+          (a.courseName ?? "").toLowerCase().includes(q);
+        if (!matchesSearch) return false;
+
+        if (activeTab === "pending")   return PENDING_STATUSES.includes(a.status);
+        if (activeTab === "submitted") return a.status === "submitted";
+        if (activeTab === "graded")    return a.status === "graded";
+        return true; // "all"
+      });
+  }, [data, activeTab, query]);
 
   return (
     <div className="space-y-6">
@@ -61,25 +65,32 @@ export default function Assignments() {
           onTabChange={(id) => setActiveTab(id as TabId)}
           className={isLoading ? "pointer-events-none opacity-50" : undefined}
         />
-        <ViewToggle view={view} onChange={setView} />
+        <div className="flex items-center gap-3">
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Search assignments..."
+          />
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
 
       {/* Content */}
       {isLoading ? (
         view === "card" ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <AssignmentCardSkeleton count={6}/>
+            <AssignmentCardSkeleton count={6} />
           </div>
         ) : (
-        <Card className="shadow-xs p-0">
-          <CardContent className="divide-y p-0">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="p-4 sm:px-6">
-                <AssignmentRowSkeleton count={1} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+          <Card className="p-0 shadow-xs">
+            <CardContent className="divide-y p-0">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-4 sm:px-6">
+                  <AssignmentRowSkeleton count={1} />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         )
       ) : error ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{error.message}</p>
@@ -87,7 +98,7 @@ export default function Assignments() {
         <AssignmentList
           assignments={filtered}
           view={view}
-          emptyMessage="No assignments found for this filter."
+          emptyMessage="No assignments match your search."
         />
       )}
     </div>
