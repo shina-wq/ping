@@ -10,7 +10,6 @@ import { Label} from "@/components/ui/label";
 import {Switch} from "@/components/ui/switch";
 import { getInitials } from "@/lib/format";
 import {cn} from "@/lib/utils";
-import CourseAnnouncements from "./courses/CourseAnnouncements";
 
 // section wrapper
 type SectionProps = {
@@ -158,7 +157,7 @@ export default function Settings() {
   const initials = user ? getInitials(user.name) : "";
 
   return (
-    <div className="max-w-2xl space-y-5 pb-24">
+    <div className="max-w-2xl space-y-5">
       {/* profile card */}
       <div className="flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-xs">
         <Avatar className="size-14">
@@ -252,7 +251,7 @@ export default function Settings() {
       </Section>
 
       {/* Save */}
-      <div className="fixed bottom-0 left-0 right-0 z-10 flex justify-end border-t border-border bg-background/95 px-8 py-3 backdrop:-blur-sm">
+      <div className="sticky bottom-0 left-0 right-0 z-10 flex justify-end border-t border-border bg-background/95 px-8 py-3 backdrop:-blur-sm">
         <Button className="px-6">Save Changes</Button>
       </div>
     </div>

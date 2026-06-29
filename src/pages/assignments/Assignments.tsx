@@ -6,9 +6,7 @@ import { usePageHeader } from "@/components/page-header-context";
 import { AssignmentList } from "@/components/assignments/assignment-list";
 import {
   AssignmentCardSkeleton,
-  AssignmentRow,
   AssignmentRowSkeleton,
-  mapAssignment,
 } from "@/components/assignments/assignment-row";
 import { FilterTabs } from "@/components/ui/filter-tabs";
 import { SearchInput } from "@/components/ui/search-input";
