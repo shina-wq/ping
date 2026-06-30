@@ -1,14 +1,18 @@
 import { useState } from "react";
 import {Bell, ChevronDown, Lock, Palette, UserRound} from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/contexts/auth-context";
 import { usePageHeader } from "@/components/page-header-context";
+import { useMe, useUpdateMe, useChangePassword } from "@/hooks/use-profile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label} from "@/components/ui/label";
 import {Switch} from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getInitials } from "@/lib/format";
+import { ApiError } from "@/lib/api-error";
 import {cn} from "@/lib/utils";
 
 // section wrapper
@@ -61,29 +65,6 @@ function ToggleRow({label, checked, onCheckedChange}: ToggleRowProps) {
   );
 }
 
-type ActionRowProps = {
-  label: string;
-  actionLabel: string;
-  onClick?: () => void;
-  destructive?: boolean;
-};
-
-function ActionRow({label, actionLabel, onClick, destructive}: ActionRowProps) {
-  return (
-    <div className="flex items-center justify-between px-5 py-4">
-      <span className="text-sm text-foreground">{label}</span>
-      <Button
-        size="sm"
-        variant={destructive ? "destructive" : "outline"}
-        onClick={onClick}
-        className="h-8"
-      >
-        {actionLabel}
-      </Button>
-    </div>
-  );
-}
-
 // Read-only input
 function ReadOnlyInput({value}: {value: string}) {
   return (
@@ -92,6 +73,102 @@ function ReadOnlyInput({value}: {value: string}) {
       value={value}
       className="h-8 cursor-default bg-muted/50 text-right text-sm text-muted-foreground focus-visible:ring-0 focus-visible:border-input"
     />
+  );
+}
+
+// Editable name field, saved on blur
+function NameField({initialValue}: {initialValue: string}) {
+  const [value, setValue] = useState(initialValue);
+  const updateMe = useUpdateMe();
+
+  function handleBlur() {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === initialValue) {
+      setValue(initialValue);
+      return;
+    }
+    updateMe.mutate(
+      { name: trimmed },
+      {
+        onSuccess: () => toast.success("Name updated."),
+        onError: (err) => {
+          const message = err instanceof ApiError ? err.message : "Failed to update name.";
+          toast.error(message);
+          setValue(initialValue);
+        },
+      }
+    );
+  }
+
+  return (
+    <Input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={handleBlur}
+      disabled={updateMe.isPending}
+      className="h-8 text-right text-sm"
+    />
+  );
+}
+
+// Password change form
+function PasswordChangeForm() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const changePassword = useChangePassword();
+
+  function handleSubmit() {
+    if (!currentPassword || !newPassword) return;
+
+    changePassword.mutate(
+      { currentPassword, newPassword },
+      {
+        onSuccess: () => {
+          toast.success("Password updated.");
+          setCurrentPassword("");
+          setNewPassword("");
+        },
+        onError: (err) => {
+          const message =
+            err instanceof ApiError && err.status === 400
+              ? "Current password is incorrect."
+              : "Failed to update password.";
+          toast.error(message);
+        },
+      }
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between px-5 py-4">
+      <span className="text-sm text-foreground">Change password</span>
+      <div className="flex items-center gap-2">
+        <Input
+          type="password"
+          placeholder="Current"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          className="h-8 w-28 text-sm"
+        />
+        <Input
+          type="password"
+          placeholder="New"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          className="h-8 w-28 text-sm"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleSubmit}
+          loading={changePassword.isPending}
+          disabled={!currentPassword || !newPassword}
+          className="h-8"
+        >
+          Update
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -131,8 +208,10 @@ export default function Settings() {
   });
 
   const {user} = useAuth();
+  const {data: profile, isLoading: profileLoading} = useMe();
 
-  // Notification toggles
+  // Notification toggles — no API support in the docs yet, so these stay
+  // local-only until a /v1/users/me/preferences-style endpoint exists.
   const [notifs, setNotifs] = useState({
     assignmentReminders: true,
     gradeAlerts: true,
@@ -143,18 +222,16 @@ export default function Settings() {
   const setNotif = (key:keyof typeof notifs) => (v: boolean) =>
     setNotifs((prev) => ({...prev, [key]: v }));
 
-  // Appearance
+  // Appearance — local-only, same reasoning.
   const [theme, setTheme] = useState("Light");
   const [compactView, setCompactView] = useState(false);
 
-  // Privacy
+  // Privacy — local-only, same reasoning.
   const [twoFactor, setTwoFactor] = useState(false);
   const [shareProgress, setShareProgress] = useState(true);
 
-  // Year of study
-  const [yearOfStudy, setYearOfStudy] = useState("2nd Year");
-
-  const initials = user ? getInitials(user.name) : "";
+  const displayUser = profile ?? user;
+  const initials = displayUser ? getInitials(displayUser.name) : "";
 
   return (
     <div className="max-w-2xl space-y-5">
@@ -166,11 +243,20 @@ export default function Settings() {
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-0.5">
-          <p className="font-semibold text-foreground">{user?.name}</p>
-          <p className="text-sm text-muted-foreground">{user?.email}</p>
-          <p className="text-xs text-muted-foreground capitalize">{user?.role} &bull; Fall Semester 2024</p>
+          {profileLoading ? (
+            <>
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
+            </>
+          ) : (
+            <>
+              <p className="font-semibold text-foreground">{displayUser?.name}</p>
+              <p className="text-sm text-muted-foreground">{displayUser?.email}</p>
+              <p className="text-xs text-muted-foreground capitalize">{displayUser?.role} &bull; Fall Semester 2024</p>
+            </>
+          )}
         </div>
-        <Button variant="outline" size="sm" className="shrink-0">
+        <Button variant="outline" size="sm" className="shrink-0" disabled>
           Change photo
         </Button>
       </div>
@@ -178,16 +264,20 @@ export default function Settings() {
       {/* Account */}
       <Section icon={<UserRound />} title="Account">
         <FieldRow label="Full Name">
-          <ReadOnlyInput value={user?.name ?? ""} />
+          {profileLoading ? (
+            <Skeleton className="ml-auto h-8 w-full" />
+          ) : (
+            <NameField initialValue={displayUser?.name ?? ""} />
+          )}
         </FieldRow>
         <FieldRow label="Email Address">
-          <ReadOnlyInput value={user?.email ?? ""} />
+          <ReadOnlyInput value={displayUser?.email ?? ""} />
         </FieldRow>
         <FieldRow label="Student ID">
-          <ReadOnlyInput value="STU-20240183" />
+          <ReadOnlyInput value={profile?.studentId ?? "—"} />
         </FieldRow>
         <FieldRow label="Year of Study">
-          <ReadOnlyInput value="3rd Year"/>
+          <ReadOnlyInput value={profile?.yearOfStudy ?? "—"} />
         </FieldRow>
       </Section>
 
@@ -237,7 +327,7 @@ export default function Settings() {
 
       {/* Privacy & Security */}
       <Section icon={<Lock />} title="Privacy & Security">
-          <ActionRow label="Change password" actionLabel="Update"/>
+          <PasswordChangeForm />
           <ToggleRow
             label="Two-factor authentication"
             checked={twoFactor}
@@ -249,12 +339,6 @@ export default function Settings() {
             onCheckedChange={setShareProgress}
           />
       </Section>
-
-      {/* Save */}
-      <div className="sticky bottom-0 left-0 right-0 z-10 flex justify-end border-t border-border bg-background/95 px-8 py-3 backdrop:-blur-sm">
-        <Button className="px-6">Save Changes</Button>
-      </div>
     </div>
   )
 }
-

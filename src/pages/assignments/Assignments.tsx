@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { AssignmentStatus } from "@/api/assignments";
 import { useAssignments } from "@/hooks/use-assignments";
@@ -13,7 +13,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 
-const PENDING_STATUSES: AssignmentStatus[] = ["upcoming", "overdue"];
+const PENDING_STATUSES: AssignmentStatus[] = ["upcoming", "due_soon", "due_tomorrow", "overdue"];
 
 const TABS = [
   { id: "all",       label: "All" },
@@ -24,34 +24,40 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+// "Pending" spans several API statuses, so it isn't passed as a single
+// `status` query param — it's filtered client-side from the unfiltered set.
+// "submitted" and "graded" map 1:1 to real API statuses and go server-side.
+const TAB_TO_STATUS: Partial<Record<TabId, AssignmentStatus>> = {
+  submitted: "submitted",
+  graded: "graded",
+};
+
 export default function Assignments() {
   usePageHeader({
     title: "Assignments",
     description: "All courses · Fall Semester 2024",
   });
 
-  const { data, isLoading, error } = useAssignments();
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [view, setView] = useState<ViewMode>("card");
   const [query, setQuery] = useState("");
 
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase();
+  const { data, isLoading, error } = useAssignments({
+    status: TAB_TO_STATUS[activeTab],
+  });
 
-    return [...(data ?? [])]
-      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-      .filter((a) => {
-        const matchesSearch =
-          a.title.toLowerCase().includes(q) ||
-          (a.courseName ?? "").toLowerCase().includes(q);
-        if (!matchesSearch) return false;
+  const filtered = [...(data ?? [])]
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .filter((a) => {
+      const q = query.toLowerCase();
+      const matchesSearch =
+        a.title.toLowerCase().includes(q) ||
+        (a.courseName ?? "").toLowerCase().includes(q);
+      if (!matchesSearch) return false;
 
-        if (activeTab === "pending")   return PENDING_STATUSES.includes(a.status);
-        if (activeTab === "submitted") return a.status === "submitted";
-        if (activeTab === "graded")    return a.status === "graded";
-        return true; // "all"
-      });
-  }, [data, activeTab, query]);
+      if (activeTab === "pending") return PENDING_STATUSES.includes(a.status);
+      return true; // "all" / "submitted" / "graded" already filtered server-side
+    });
 
   return (
     <div className="space-y-6">

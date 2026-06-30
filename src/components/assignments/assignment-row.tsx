@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CircleCheckBig, FileText, ArrowUpRight } from "lucide-react";
+import { CircleCheckBig, FileText } from "lucide-react";
 import { format } from "date-fns";
 
 import type { Assignment, AssignmentStatus } from "@/api/assignments";
@@ -19,22 +19,18 @@ export type AssignmentRow = {
   isSubmitted: boolean;
 };
 
-type DisplayStatus =
-  | "upcoming"
-  | "overdue"
-  | "submitted"
-  | "graded";
-
-const STATUS_CONFIG: Record<DisplayStatus, { label: string; className: string }> = {
-  upcoming: { label: "Upcoming", className: "bg-sky-500/10 text-sky-500" },
-  overdue: { label: "Overdue", className: "bg-red-600/10 text-red-600" },
-  submitted: { label: "Submitted", className: "bg-emerald-500/10 text-emerald-600" },
-  graded: { label: "Graded", className: "bg-emerald-500/10 text-emerald-600" },
+const STATUS_CONFIG: Record<AssignmentStatus, { label: string; className: string }> = {
+  upcoming:     { label: "Upcoming",     className: "bg-sky-500/10 text-sky-500" },
+  due_soon:     { label: "Due Soon",     className: "bg-primary/10 text-primary" },
+  due_tomorrow: { label: "Due Tomorrow", className: "bg-rose-500/10 text-rose-500" },
+  overdue:      { label: "Overdue",      className: "bg-red-600/10 text-red-600" },
+  submitted:    { label: "Submitted",    className: "bg-emerald-500/10 text-emerald-600" },
+  graded:       { label: "Graded",       className: "bg-emerald-500/10 text-emerald-600" },
 };
 
 // Mapper
 export function mapAssignment(a: Assignment): AssignmentRow {
-  const config = STATUS_CONFIG[a.status as DisplayStatus] || STATUS_CONFIG.upcoming;
+  const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.upcoming;
 
   return {
     id: a.id,
@@ -129,8 +125,7 @@ export function AssignmentCardSkeleton({count = 6}: {count?:number}) {
         </div>
       </Card>
     ))}
-      
-      </>
+    </>
   );
 }
 

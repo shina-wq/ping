@@ -4,13 +4,17 @@ import {
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  dismissNotification,
+  dismissAllNotifications,
+  type ListNotificationsParams,
 } from "@/api/notifications";
 import { queryKeys } from "@/lib/query-keys";
 
-export function useNotifications() {
+export function useNotifications(params: ListNotificationsParams = {}) {
   return useQuery({
-    queryKey: queryKeys.notifications.all(),
-    queryFn: getNotifications,
+    queryKey: queryKeys.notifications.all(params),
+    queryFn: () => getNotifications(params),
+    select: (res) => res.data,
   });
 }
 
@@ -19,9 +23,9 @@ export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: markNotificationRead,
+    mutationFn: (id: string) => markNotificationRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all() });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -33,7 +37,29 @@ export function useMarkAllNotificationsRead() {
   return useMutation({
     mutationFn: markAllNotificationsRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all() });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+}
+
+export function useDismissNotification() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: dismissNotification,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+}
+
+export function useDismissAllNotifications() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: dismissAllNotifications,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }

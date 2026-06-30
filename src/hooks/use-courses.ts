@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getCourses, getCourse } from "@/api/courses";
+import { getCourses, getCourse, type ListCoursesParams } from "@/api/courses";
 import { queryKeys } from "@/lib/query-keys";
 
-export function useCourses() {
+export function useCourses(params: ListCoursesParams = {}) {
   return useQuery({
-    queryKey: queryKeys.courses.all(),
-    queryFn: getCourses,
+    queryKey: queryKeys.courses.all(params),
+    queryFn: () => getCourses(params),
+    select: (res) => res.data,
   });
 }
 

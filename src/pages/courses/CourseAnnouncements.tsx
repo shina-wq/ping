@@ -1,62 +1,16 @@
 import {format} from "date-fns";
+import { useParams } from "react-router-dom";
 
 import {Badge} from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getInitials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-// Types
-type Announcement = {
-  id: string;
-  title: string;
-  body: string;
-  author: string;
-  createdAt: string;
-  isNew: boolean;
-  isPinned: boolean;
-}
+import { useAnnouncements } from "@/hooks/use-announcements";
+import type { Announcement } from "@/api/announcements";
 
-// Static data
-const ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: "1",
-    title: "Problem Set 4 — Clarification on Question 3",
-    body: "Several students have asked about Question 3 in Problem Set 4. To clarify: you should use the quadratic formula, not factoring, for part (b). Full marks will be awarded for either method if the working is shown correctly. Please reach out if you have further questions before the Dec 14 deadline.",
-    author: "Dr. Johnson",
-    createdAt: "2024-12-13",
-    isNew: true,
-    isPinned: true,
-  },
-  {
-    id: "2",
-    title: "Midterm Results Posted",
-    body: "Midterm exam results have been posted to the Grades tab. The class average was 79%. Overall a solid performance — well done to everyone. Individual feedback has been added to each submission. If you wish to discuss your result, office hours are Tuesdays 2–4 PM.",
-    author: "Dr. Johnson",
-    createdAt: "2024-12-02",
-    isNew: true,
-    isPinned: false,
-  },
-  {
-    id: "3",
-    title: "No Class on Nov 29 — Public Holiday",
-    body: "As a reminder, there will be no lecture on Friday November 29 due to the public holiday. The recorded lecture from last semester covering the same content is available on the course page. Please watch it before the next session on December 3.",
-    author: "Dr. Johnson",
-    createdAt: "2024-11-27",
-    isNew: false,
-    isPinned: false,
-  },
-  {
-    id: "4",
-    title: "Welcome to Mathematics 101 — Fall 2024",
-    body: 'Welcome everyone! I am looking forward to a great semester. Please review the course syllabus linked below and make sure you have access to the required textbook: "Calculus: Early Transcendentals" 9th edition. Our first assignment will be due in Week 3. Office hours are posted on the course info page.',
-    author: "Dr. Johnson",
-    createdAt: "2024-09-03",
-    isNew: false,
-    isPinned: false,
-  },
-];
-
-function AnnouncementCard({title, body, author, createdAt, isNew, isPinned}: Announcement) {
+function AnnouncementCard({title, body, author, createdAt, isUnread, isPinned}: Announcement) {
   return (
     <div
       className={cn(
@@ -67,7 +21,7 @@ function AnnouncementCard({title, body, author, createdAt, isNew, isPinned}: Ann
           <h3 className="text-sm font-semibold text-foreground">
             {title}
           </h3>
-          {isNew && (
+          {isUnread && (
             <Badge variant="info" className="h-5 rounded-full px-2 text-[10px]">
               New
             </Badge>
@@ -96,9 +50,54 @@ function AnnouncementCard({title, body, author, createdAt, isNew, isPinned}: Ann
   );
 }
 
+function AnnouncementsSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border p-5">
+          <Skeleton className="mb-3 h-4 w-64" />
+          <div className="mb-3 flex items-center gap-2">
+            <Skeleton className="size-6 rounded-full" />
+            <Skeleton className="h-3 w-40" />
+          </div>
+          <Skeleton className="h-12 w-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function CourseAnnouncements() {
-  // Pinned first, then chronological order
-  const sorted = [...ANNOUNCEMENTS].sort((a, b) => {
+  const { courseId } = useParams<{ courseId: string }>();
+  const { data: announcements, isLoading, error } = useAnnouncements(courseId ?? "");
+
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl">
+        <AnnouncementsSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="py-12 text-center text-sm text-muted-foreground">
+        Failed to load announcements. Please try again.
+      </p>
+    );
+  }
+
+  if (!announcements?.length) {
+    return (
+      <p className="py-12 text-center text-sm text-muted-foreground">
+        No announcements for this course yet.
+      </p>
+    );
+  }
+
+  // Server already returns pinned-first, newest-first, but we re-sort
+  // defensively in case pagination ever changes that guarantee.
+  const sorted = [...announcements].sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });

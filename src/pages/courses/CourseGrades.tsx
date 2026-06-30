@@ -45,12 +45,12 @@ function GradeRowSkeleton({count = 4}: {count?: number}) {
 
 export default function CourseGrades() {
   const {courseId} = useParams<{courseId:string}>();
-  const {data: grades, isLoading, error} = useGrades();
+  const {data: courseGrades, isLoading, error} = useGrades({ courseId });
 
-  const CourseGrades = (grades ?? []).filter((g) => g.courseId === courseId);
+  const grades = courseGrades ?? [];
 
-  const average = CourseGrades.length > 0 ? Math.round(
-    CourseGrades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) / CourseGrades.length ) : null;
+  const average = grades.length > 0 ? Math.round(
+    grades.reduce((sum, g) => sum + (g.score / g.maxScore) * 100, 0) / grades.length ) : null;
 
   if (isLoading) {
     return (
@@ -99,7 +99,7 @@ export default function CourseGrades() {
               {average}%
             </p>
             <p className="text-xs text-muted-foreground">
-              Based on {CourseGrades.length} graded assessment {CourseGrades.length !== 1 ? "s" : ""}
+              Based on {grades.length} graded assessment {grades.length !== 1 ? "s" : ""}
             </p>
             </>
           ) : (
@@ -123,14 +123,14 @@ export default function CourseGrades() {
               </TableHeader>
 
               <TableBody>
-                {CourseGrades.length === 0 ? (
+                {grades.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
                       No grades recorded yet.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  CourseGrades.map((grade) => {
+                  grades.map((grade) => {
                     const pct = Math.round((grade.score / grade.maxScore) * 100);
 
                     return (

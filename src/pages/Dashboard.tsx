@@ -1,6 +1,6 @@
 import { BookOpen, FileText, Star, type LucideIcon } from "lucide-react";
 
-import type { DashboardStats } from "@/api/dashboard";
+import type { StudentDashboardStats } from "@/api/dashboard";
 
 import { useAuth } from "@/contexts/auth-context";
 
@@ -33,7 +33,7 @@ type StatCard = {
   accent: string;
 };
 
-function mapStats(s: DashboardStats): StatCard[] {
+function mapStats(s: StudentDashboardStats): StatCard[] {
   return [
     { label: "Active Courses", value: String(s.activeCourses), icon: BookOpen, accent: "bg-primary/10 text-primary" },
     { label: "Pending Assignments", value: String(s.pendingAssignments), icon: FileText, accent: "bg-orange-500/10 text-orange-500" },
@@ -80,6 +80,7 @@ function StatsSkeleton() {
 export default function Dashboard() {
   const { user } = useAuth();
   const firstName = user?.name.split(" ")[0] ?? "";
+  const isTeacher = user?.role === "teacher";
 
   usePageHeader({
     title: formatGreeting(firstName),
@@ -87,13 +88,16 @@ export default function Dashboard() {
   });
 
   const { data: statsData, isLoading: statsLoading, error: statsError } = useDashboardStats();
-  const { data: coursesData, isLoading: coursesLoading, error: coursesError } = useCourses();
-  const { data: assignmentsData, isLoading: assignmentsLoading, error: assignmentsError } = useAssignments();
-  const { data: gradesData, isLoading: gradesLoading, error: gradesError } = useGrades();
+  const { data: courses, isLoading: coursesLoading, error: coursesError } = useCourses({ limit: 2 });
+  const { data: assignmentsData, isLoading: assignmentsLoading, error: assignmentsError } = useAssignments({ limit: 10 });
+  const { data: gradesData, isLoading: gradesLoading, error: gradesError } = useGrades({ limit: 4 });
   const { data: remindersData, isLoading: remindersLoading, error: remindersError } = useReminders();
 
-  const stats = statsData ? mapStats(statsData) : [];
-  const courses = coursesData ? coursesData.map(mapCourse) : [];
+  // Teacher dashboard isn't built yet — the stats shape differs
+  // (totalStudents, pendingSubmissions, etc) and needs its own view.
+  // For now, the student view below renders only when stats match that shape.
+  const stats = !isTeacher && statsData ? mapStats(statsData as StudentDashboardStats) : [];
+  const mappedCourses = courses ? courses.map(mapCourse) : [];
   const assignments = assignmentsData
     ? assignmentsData
         .filter((a) => a.status === "upcoming" || a.status === "overdue")
@@ -101,6 +105,14 @@ export default function Dashboard() {
     : [];
   const grades = gradesData ? gradesData.map(mapGrade) : [];
   const reminders = remindersData ? remindersData.map(mapReminder) : [];
+
+  if (isTeacher) {
+    return (
+      <p className="py-12 text-center text-sm text-muted-foreground">
+        Teacher dashboard is coming soon.
+      </p>
+    );
+  }
 
   return (
     <div className="w-full min-w-0 space-y-6">
@@ -122,7 +134,7 @@ export default function Dashboard() {
             {coursesLoading ? <CourseCardSkeleton count={2} /> : coursesError ? (
               <div className="col-span-2"><SectionError /></div>
             ) : (
-              courses.slice(0, 2).map((course) => <CourseCard key={course.id} {...course} />)
+              mappedCourses.slice(0, 2).map((course) => <CourseCard key={course.id} {...course} />)
             )}
           </CardContent>
         </Card>
@@ -133,7 +145,7 @@ export default function Dashboard() {
             {assignmentsLoading ? <AssignmentRowSkeleton count={4} /> : assignmentsError ? (
               <SectionError />
             ) : (
-              assignments.map((a) => <AssignmentRow key={a.id} {...a} />)
+              assignments.slice(0, 4).map((a) => <AssignmentRow key={a.id} {...a} />)
             )}
           </CardContent>
         </Card>

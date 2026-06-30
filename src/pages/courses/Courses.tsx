@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useCourses } from "@/hooks/use-courses";
 import { usePageHeader } from "@/components/page-header-context";
@@ -12,35 +12,35 @@ import {
 import { FilterTabs } from "@/components/ui/filter-tabs";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 import { SearchInput } from "@/components/ui/search-input";
+import type { CourseStatus } from "@/api/courses";
 
 type CourseFilter = "All Courses" | "In Progress" | "Completed" | "Not Started";
 const TABS: CourseFilter[] = ["All Courses", "In Progress", "Completed", "Not Started"];
 
+// "In Progress" / "Not Started" aren't real API statuses (the API only
+// tracks active/completed/archived) — those two map to "active" and are
+// disambiguated client-side using the progress field once data is back.
+const FILTER_TO_STATUS: Partial<Record<CourseFilter, CourseStatus>> = {
+  Completed: "completed",
+};
+
 export default function Courses() {
   usePageHeader({ title: "My Courses", description: "All your enrolled courses." });
 
-  const { data: courses, isLoading, error } = useCourses();
   const [filter, setFilter] = useState<CourseFilter>("All Courses");
   const [view, setView] = useState<ViewMode>("card");
   const [query, setQuery] = useState("");
 
-  const filteredCourses = useMemo(() => {
-    if (!courses) return [];
+  const { data: courses, isLoading, error } = useCourses({
+    search: query || undefined,
+    status: FILTER_TO_STATUS[filter],
+  });
 
-    const q = query.toLowerCase();
-
-    return courses.filter((c) => {
-      const matchesSearch =
-        c.title.toLowerCase().includes(q) ||
-        (c.instructor ?? "").toLowerCase().includes(q);
-      if (!matchesSearch) return false;
-
-      if (filter === "In Progress") return c.progress > 0 && c.progress < 100;
-      if (filter === "Completed") return c.progress === 100;
-      if (filter === "Not Started") return c.progress === 0;
-      return true; // "All Courses"
-    });
-  }, [courses, filter, query]);
+  const filteredCourses = (courses ?? []).filter((c) => {
+    if (filter === "In Progress") return c.status === "active" && c.progress > 0 && c.progress < 100;
+    if (filter === "Not Started") return c.status === "active" && c.progress === 0;
+    return true; // "All Courses" / "Completed" already filtered server-side
+  });
 
   const isEmpty = !isLoading && !error && !courses?.length;
   const isNoMatch = !isLoading && !error && !!courses?.length && !filteredCourses.length;

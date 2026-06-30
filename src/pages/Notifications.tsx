@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { format, isToday, isThisWeek } from "date-fns";
-import {Bell, GraduationCap, Megaphone, CheckCircle2} from "lucide-react";
+import {Bell, GraduationCap, Megaphone, CheckCircle2, Trash2} from "lucide-react";
 import {Link} from "react-router-dom";
 import { usePageHeader } from "@/components/page-header-context";
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from "@/hooks/use-notifications";
+import {
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  useDismissNotification,
+  useDismissAllNotifications,
+} from "@/hooks/use-notifications";
 import type { Notification } from "@/api/notifications";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -100,16 +106,18 @@ function CourseLink({body}: {body: string}) {
 type NotificationRowProps = {
   notification: Notification;
   onMarkRead: (id: string) => void;
+  onDismiss: (id: string) => void;
   isPending: boolean;
+  isDismissing: boolean;
 };
 
-function NotificationRow({notification: n, onMarkRead, isPending}: NotificationRowProps) {
+function NotificationRow({notification: n, onMarkRead, onDismiss, isPending, isDismissing}: NotificationRowProps) {
   const date = new Date(n.createdAt);
   const timeLabel = isToday(date) ? `${Math.max(1, Math.round((Date.now() - date.getTime()) / 3_600_000))} h ago` : format(date, "MMM d");
 
   return (
     <div className={cn(
-      "flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors",
+      "group flex items-center gap-4 rounded-xl border px-5 py-4 transition-colors",
       !n.isRead ? "border-primary/20 bg-primary/5" : "border-border bg-card hover:bg-muted/40"
     )}>
       <NotifIcon notification={n}/>
@@ -127,25 +135,35 @@ function NotificationRow({notification: n, onMarkRead, isPending}: NotificationR
         <CourseLink body={n.body} />
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <span
-          className={cn(
-            "flex items-center gap-1 text-xs",
-            !n.isRead ? "font-medium text-primary" : "text-muted-foreground"
-          )}
-        >
-          {!n.isRead && <span className="size-1.5 rounded-full bg-primary"/> }
-          {timeLabel}
-        </span>
-        {!n.isRead && (
-          <button
-            onClick={() => onMarkRead(n.id)}
-            disabled={isPending}
-            className="text-xs text-primary hover:underline disabled:opacity-50"
+      <div className="flex shrink-0 items-center gap-3">
+        <div className="flex flex-col items-end gap-2">
+          <span
+            className={cn(
+              "flex items-center gap-1 text-xs",
+              !n.isRead ? "font-medium text-primary" : "text-muted-foreground"
+            )}
           >
-            Mark read
-          </button>
-        )}
+            {!n.isRead && <span className="size-1.5 rounded-full bg-primary"/> }
+            {timeLabel}
+          </span>
+          {!n.isRead && (
+            <button
+              onClick={() => onMarkRead(n.id)}
+              disabled={isPending}
+              className="text-xs text-primary hover:underline disabled:opacity-50"
+            >
+              Mark read
+            </button>
+          )}
+        </div>
+        <button
+          onClick={() => onDismiss(n.id)}
+          disabled={isDismissing}
+          aria-label={`Dismiss "${n.title}"`}
+          className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 disabled:opacity-50"
+        >
+          <Trash2 className="size-4" />
+        </button>
       </div>
     </div>
   );
@@ -227,6 +245,8 @@ export default function Notifications() {
   const {data: notifications, isLoading, error} = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
+  const dismiss = useDismissNotification();
+  const dismissAll = useDismissAllNotifications();
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
   const filtered = filterNotifications(notifications ?? [], activeTab);
@@ -243,17 +263,31 @@ export default function Notifications() {
         ) : (
           <span />
         )}
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => markAllRead.mutate()}
-            disabled={markAllRead.isPending}
-          >
-            <CheckCircle2 className="size-3.5"/>
-            {markAllRead.isPending ? "Marking..." : "Mark all as read"}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => markAllRead.mutate()}
+              disabled={markAllRead.isPending}
+            >
+              <CheckCircle2 className="size-3.5"/>
+              {markAllRead.isPending ? "Marking..." : "Mark all as read"}
+            </Button>
+          )}
+          {!!notifications?.length && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => dismissAll.mutate()}
+              disabled={dismissAll.isPending}
+            >
+              <Trash2 className="size-3.5"/>
+              Clear all
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -278,7 +312,9 @@ export default function Notifications() {
                   key={n.id}
                   notification={n}
                   onMarkRead={(id) => markRead.mutate(id)}
+                  onDismiss={(id) => dismiss.mutate(id)}
                   isPending={markRead.isPending}
+                  isDismissing={dismiss.isPending}
                 />
               ))}
             </section>

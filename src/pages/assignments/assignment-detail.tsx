@@ -10,20 +10,24 @@ import {
     XIcon
 } from "lucide-react";
 import {format} from "date-fns";
+import { toast } from "sonner";
 
 import { useAssignment } from "@/hooks/use-assignments";
+import { useSubmitAssignment } from "@/hooks/use-submit-assignment";
 import { usePageHeader } from "@/components/page-header-context";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { ApiError } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
+import type { AssignmentStatus } from "@/api/assignments";
 
 // Status config
-type DisplayStatus = "upcoming" | "overdue" | "submitted" | "graded";
-
-const STATUS_CONFIG: Record<DisplayStatus, {label: string; className: string}> = {
+const STATUS_CONFIG: Record<AssignmentStatus, {label: string; className: string}> = {
     upcoming: {label: "Upcoming", className: "bg-sky-500/10 text-white border-sky-500/20"},
+    due_soon: {label: "Due Soon", className: "bg-primary/10 text-white border-primary/20"},
+    due_tomorrow: {label: "Due Tomorrow", className: "bg-rose-500 text-white border-transparent"},
     overdue: {label: "Overdue", className: "bg-red-500 text-white border-transparent"},
     submitted: {label: "Submitted", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"},
     graded: {label: "Graded", className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"},
@@ -74,6 +78,7 @@ export default function AssignmentDetail() {
 
     const {assignmentId} = useParams<{assignmentId: string}>();
     const {data: assignment, isLoading, error} = useAssignment(assignmentId ?? "");
+    const submitAssignment = useSubmitAssignment();
 
     const [showSubmit, setShowSubmit] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -91,9 +96,12 @@ export default function AssignmentDetail() {
     }
 
     const dueFormatted = format(new Date(assignment.dueDate), "MMM d, yyyy 'at' h:mm a");
-    const statusKey = assignment.status as DisplayStatus;
-    const statusCfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.upcoming;
-    const isSubmittable = assignment.status === "upcoming" || assignment.status === "overdue";
+    const statusCfg = STATUS_CONFIG[assignment.status] || STATUS_CONFIG.upcoming;
+    const isSubmittable =
+        assignment.status === "upcoming" ||
+        assignment.status === "due_soon" ||
+        assignment.status === "due_tomorrow" ||
+        assignment.status === "overdue";
 
     function handleSubmitClick() {
         setShowSubmit(true);
@@ -105,6 +113,23 @@ export default function AssignmentDetail() {
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0] ?? null;
         setSelectedFile(file);
+    }
+
+    async function handleSubmit() {
+        if (!selectedFile || !assignmentId) return;
+
+        try {
+            await submitAssignment.mutateAsync({ assignmentId, file: selectedFile });
+            toast.success("Assignment submitted.");
+            setShowSubmit(false);
+            setSelectedFile(null);
+        } catch (err) {
+            const message =
+                err instanceof ApiError
+                    ? err.message
+                    : "Something went wrong submitting your assignment. Please try again.";
+            toast.error(message);
+        }
     }
 
     return (
@@ -265,7 +290,12 @@ export default function AssignmentDetail() {
                                   className="hidden"
                                   onChange={handleFileChange}
                                 />
-                                <Button className="mt-4 w-full" disabled={!selectedFile}>
+                                <Button
+                                  className="mt-4 w-full"
+                                  disabled={!selectedFile}
+                                  loading={submitAssignment.isPending}
+                                  onClick={handleSubmit}
+                                >
                                   Submit Assignment
                                 </Button>
                               </CardContent>

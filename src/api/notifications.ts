@@ -1,7 +1,7 @@
 import { apiClient } from "@/api/client";
+import type { Paginated, PaginationParams } from "@/api/pagination";
 
 // Types
-
 export type Notification = {
   id: string;
   title: string;
@@ -10,10 +10,15 @@ export type Notification = {
   createdAt: string; // ISO 8601 date string
 };
 
-// Requests
+export type ListNotificationsParams = PaginationParams & {
+  isRead?: boolean;
+};
 
-export async function getNotifications(): Promise<Notification[]> {
-  const { data } = await apiClient.get<Notification[]>("/notifications");
+// Requests
+export async function getNotifications(
+  params: ListNotificationsParams = {}
+): Promise<Paginated<Notification>> {
+  const { data } = await apiClient.get<Paginated<Notification>>("/notifications", { params });
   return data;
 }
 
@@ -23,10 +28,19 @@ export async function getNotificationCount(): Promise<number> {
   return data.count;
 }
 
-export async function markNotificationRead(id: string): Promise<void> {
-  await apiClient.patch(`/notifications/${id}/read`);
+export async function markNotificationRead(id: string, isRead = true): Promise<void> {
+  await apiClient.patch(`/notifications/${id}`, { isRead });
 }
 
-export async function markAllNotificationsRead(): Promise<void> {
-  await apiClient.post("/notifications/read-all");
+export async function markAllNotificationsRead(): Promise<{ updated: number }> {
+  const { data } = await apiClient.post<{ updated: number }>("/notifications/read-all");
+  return data;
+}
+
+export async function dismissNotification(id: string): Promise<void> {
+  await apiClient.delete(`/notifications/${id}`);
+}
+
+export async function dismissAllNotifications(): Promise<void> {
+  await apiClient.delete("/notifications");
 }

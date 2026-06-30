@@ -95,7 +95,7 @@ export function NotificationsPopover() {
   const [open, setOpen] = useState(false);
 
   const unreadCount = useNotificationCount();
-  const {data: notifications, isLoading, error} = useNotifications();
+  const {data: notifications, isLoading, error} = useNotifications({ limit: 5 });
   const markRead = useMarkNotificationRead();
 
   // Show up to 5 most recent in the popover

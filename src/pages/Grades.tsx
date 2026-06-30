@@ -46,6 +46,8 @@ export default function Grades() {
   const { data: grades, isLoading, error } = useGrades();
   const [query, setQuery] = useState("");
 
+  // The API doesn't support a `search` param on /grades, so this stays
+  // client-side over the fetched page.
   const filteredGrades = useMemo(() => {
     const q = query.toLowerCase();
     return (grades ?? []).filter(

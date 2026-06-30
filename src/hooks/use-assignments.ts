@@ -1,12 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getAssignments, getAssignment } from "@/api/assignments";
+import {
+  getAssignments,
+  getCourseAssignments,
+  getAssignment,
+  type ListAssignmentsParams,
+} from "@/api/assignments";
 import { queryKeys } from "@/lib/query-keys";
 
-export function useAssignments() {
+export function useAssignments(params: ListAssignmentsParams = {}) {
   return useQuery({
-    queryKey: queryKeys.assignments.all(),
-    queryFn: getAssignments,
+    queryKey: queryKeys.assignments.all(params),
+    queryFn: () => getAssignments(params),
+    select: (res) => res.data,
+  });
+}
+
+export function useCourseAssignments(courseId: string, params: ListAssignmentsParams = {}) {
+  return useQuery({
+    queryKey: queryKeys.assignments.byCourse(courseId, params),
+    queryFn: () => getCourseAssignments(courseId, params),
+    select: (res) => res.data,
+    enabled: !!courseId,
   });
 }
 

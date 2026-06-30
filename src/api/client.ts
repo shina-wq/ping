@@ -7,16 +7,19 @@ const getToken = (): string | null => {
   return localStorage.getItem("auth_token");
 };
 
-const baseURL = import.meta.env.VITE_API_URL;
+// All routes are versioned under /v1 per the API reference.
+const baseURL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/v1`
+  : "/v1";
 
-if (!baseURL && import.meta.env.DEV) {
+if (!import.meta.env.VITE_API_URL && import.meta.env.DEV) {
   console.warn(
     "[api] VITE_API_URL is not set — requests will use a relative base URL."
   );
 }
 
 export const apiClient = axios.create({
-  baseURL: baseURL ?? "",
+  baseURL,
   headers: {
     "Content-Type": "application/json",
   },

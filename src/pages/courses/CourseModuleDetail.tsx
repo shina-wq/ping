@@ -1,6 +1,6 @@
-import {useState} from "react";
-import {Link, useParams} from "react-router-dom";
-import { 
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import {
     ArrowLeft,
     ArrowRight,
     CheckCircle2,
@@ -12,15 +12,12 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-import { MODULES_DATA } from "@/data/course_modules";
-import type {
-    Lesson,
-    LessonStatus,
-    LessonType,
-    Module,
-} from "@/types/course_modules";
+import { useModules } from "@/hooks/use-modules";
+import { useLessons, useCompleteLesson } from "@/hooks/use-modules";
+import type { Lesson, LessonStatus, LessonType } from "@/api/modules";
 
 // Status & type display config
 const STATUS_ICON = {
@@ -35,32 +32,75 @@ const TYPE_LABEL: Record<LessonType, string> = {
     quiz: "Quiz",
 };
 
+function ModuleDetailSkeleton() {
+    return (
+        <div className="flex min-h-0 flex-col gap-6 lg:flex-row lg:gap-10">
+            <aside className="w-full shrink-0 lg:w-68">
+                <Skeleton className="mb-5 h-5 w-32" />
+                <Skeleton className="mb-3 h-24 w-full rounded-xl" />
+                <div className="space-y-1">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                    ))}
+                </div>
+            </aside>
+            <main className="min-w-0 flex-1 space-y-6">
+                <Skeleton className="aspect-video w-full rounded-2xl" />
+                <Skeleton className="h-8 w-2/3" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+            </main>
+        </div>
+    );
+}
+
 // component
 export default function CourseModuleDetail() {
     const {moduleId, courseId} = useParams<{moduleId: string; courseId: string }>();
 
-    const module = MODULES_DATA[moduleId || "1"];
+    const { data: modules } = useModules(courseId ?? "");
+    const moduleMeta = modules?.find((m) => m.id === moduleId);
 
-    if (!module) {
-        return <div>Module not found.</div>;
+    const { data: lessons, isLoading, error } = useLessons(courseId ?? "", moduleId ?? "");
+    const completeLesson = useCompleteLesson();
+
+    const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+
+    // Default to the current lesson, falling back to the first, whenever
+    // the lesson list loads or changes.
+    useEffect(() => {
+        if (!lessons?.length) return;
+        const defaultLesson = lessons.find((l) => l.status === "current") ?? lessons[0];
+        setActiveLesson((prev) => prev ?? defaultLesson);
+    }, [lessons]);
+
+    if (isLoading) return <ModuleDetailSkeleton />;
+
+    if (error) {
+        return (
+            <p className="py-12 text-center text-sm text-muted-foreground">
+                Failed to load this module. Please try again.
+            </p>
+        );
     }
 
-    // Start on the current lesson; fall back to the first
-    const defaultLesson = module.lessons.find((l) => l.status === "current") ?? module.lessons[0];
-
-    if (!defaultLesson) {
-        return <div>No lessons found.</div>
+    if (!lessons?.length || !activeLesson) {
+        return <div>No lessons found.</div>;
     }
 
-    const [activeLesson, setActiveLesson] = useState<Lesson>(defaultLesson);
+    const completedCount = lessons.filter((l) => l.status === "completed").length;
+    const progress = Math.round((completedCount / lessons.length) * 100);
 
-    const completedCount = module.lessons.filter((l) => l.status === "completed").length;
-    const progress = Math.round((completedCount / module.lessons.length) * 100);
-
-    const activeIndex = module.lessons.findIndex((l) => l.id === activeLesson.id);
-    const prevLesson = activeIndex > 0 ? module.lessons[activeIndex - 1] : null;
-    const nextLesson = activeIndex < module.lessons.length - 1 ? module.lessons[activeIndex + 1]: null;
+    const activeIndex = lessons.findIndex((l) => l.id === activeLesson.id);
+    const prevLesson = activeIndex > 0 ? lessons[activeIndex - 1] : null;
+    const nextLesson = activeIndex < lessons.length - 1 ? lessons[activeIndex + 1] : null;
     const isNextLocked = nextLesson?.status === "locked";
+
+    function handleNext() {
+        if (!nextLesson || isNextLocked || !activeLesson) return;
+        // Mark the lesson we're leaving as complete, then advance.
+        completeLesson.mutate(activeLesson.id);
+        setActiveLesson(nextLesson);
+    }
 
     return (
         <div className="flex min-h-0 flex-col gap-6 lg:flex-row lg:gap-10">
@@ -78,17 +118,17 @@ export default function CourseModuleDetail() {
                 {/* Progress card */}
                 <div className="mb-3 rounded-xl border border-border bg-card p-4 shadow-xs">
                     <p className="mb-0.5 text-sm font-semibold text-foreground">
-                        {module.title}
+                        {moduleMeta?.title ?? "Module"}
                     </p>
                     <p className="mb-3 text-xs text-muted-foreground">
-                        {completedCount} / {module.lessons.length} lessons completed
+                        {completedCount} / {lessons.length} lessons completed
                     </p>
                     <Progress value={progress} className="h-1.5"/>
                 </div>
 
                 {/* Lesson list */}
                 <nav className="space-y-0.5">
-                    {module.lessons.map((lesson) => {
+                    {lessons.map((lesson) => {
                         const {icon: StatusIcon, className: iconClass } = STATUS_ICON[lesson.status];
                         const isActive = lesson.id === activeLesson.id;
                         const isLocked = lesson.status === "locked";
@@ -104,7 +144,7 @@ export default function CourseModuleDetail() {
                                     ? "bg-primary/10 text-primary"
                                     : isLocked
                                     ? "cursor-not-allowed opacity-50"
-                                    : "text-foreground hover:bg-muted"  
+                                    : "text-foreground hover:bg-muted"
                                 )}
                             >
                                 <StatusIcon className={cn("mt-0.5 size-4 shrink-0", iconClass)}/>
@@ -183,7 +223,8 @@ export default function CourseModuleDetail() {
                 </Button>
                 <Button
                     disabled={!nextLesson || isNextLocked}
-                    onClick={() => nextLesson && !isNextLocked && setActiveLesson(nextLesson)}
+                    loading={completeLesson.isPending}
+                    onClick={handleNext}
                 >
                     Next
                     <ArrowRight className="size-4"/>

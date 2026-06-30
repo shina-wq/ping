@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useAssignments } from "@/hooks/use-assignments";
+import { useCourseAssignments } from "@/hooks/use-assignments";
 import { AssignmentList } from "@/components/assignments/assignment-list";
 import { AssignmentRowSkeleton } from "@/components/assignments/assignment-row";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +23,7 @@ function CourseAssignmentsSkeleton() {
 
 export default function CourseAssignments() {
   const { courseId } = useParams<{ courseId: string }>();
-  const { data, isLoading, error } = useAssignments();
+  const { data, isLoading, error } = useCourseAssignments(courseId ?? "");
 
   if (isLoading) {
     return (
@@ -41,9 +41,9 @@ export default function CourseAssignments() {
     );
   }
 
-  const courseAssignments = (data ?? [])
-    .filter((a) => a.courseId === courseId)
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const courseAssignments = [...(data ?? [])].sort(
+    (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+  );
 
   return (
     <div className="max-w-4xl">

@@ -8,6 +8,8 @@ import type { Assignment, AssignmentStatus } from "@/api/assignments";
 
 const PENDING_STATUSES: AssignmentStatus[] = [
   "upcoming",
+  "due_soon",
+  "due_tomorrow",
   "overdue",
 ];
 
@@ -40,13 +42,13 @@ export function AssignmentList({ assignments, emptyMessage = "No assignments fou
             {group.length}
           </Badge>
         </div>
-        
+
         {view === "card" ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {group.map((a) => {
               const config = STATUS_CONFIG[a.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.upcoming;
               return (
-                <AssignmentCard 
+                <AssignmentCard
                   key={a.id}
                   id={a.id}
                   title={a.title}
