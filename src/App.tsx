@@ -5,6 +5,8 @@ import { PageHeaderProvider } from "@/components/page-header-context";
 import { Toaster } from "@/components/ui/sonner";
 import { router } from "@/router";
 
+import { AppErrorBoundary } from "@/components/app-error-boundary";
+
 // Created outside the component so it's never recreated on re-renders.
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,12 +19,14 @@ const queryClient = new QueryClient({
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <PageHeaderProvider>
-        <RouterProvider router={router} />
-      </PageHeaderProvider>
-      {/* Toaster must be outside RouterProvider so toasts survive route transitions. */}
-      <Toaster position="top-right" />
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <PageHeaderProvider>
+          <RouterProvider router={router} />
+        </PageHeaderProvider>
+        {/* Toaster must be outside RouterProvider so toasts survive route transitions. */}
+        <Toaster position="top-right" />
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
