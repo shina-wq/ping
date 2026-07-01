@@ -18,7 +18,7 @@ const OPTIONS = [
 
 export function ViewToggle({ view, onChange, className }: Props) {
   return (
-    <div className={cn("inline-flex gap-0.5 rounded-md border border-border bg-muted/50 p-0.5", className)}>
+    <div className={cn("inline-flex gap-1 rounded-full border border-border bg-muted/50 p-1", className)}>
       {OPTIONS.map(({ value, Icon, label }) => (
         <Button
           key={value}
@@ -27,7 +27,7 @@ export function ViewToggle({ view, onChange, className }: Props) {
           aria-label={label}
           aria-pressed={view === value}
           onClick={() => onChange(value)}
-          className="size-7 rounded"
+          className="size-7 rounded-full"
         >
           <Icon className="size-3.5" />
         </Button>
