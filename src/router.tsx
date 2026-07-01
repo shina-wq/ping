@@ -22,10 +22,13 @@ import CourseModuleDetail from "@/pages/courses/CourseModuleDetail";
 // Assignment Detail
 import AssignmentDetail from "./pages/assignments/assignment-detail";
 
+import RouteErrorBoundary from "@/components/route-error-boundary";
+
 export const router = createBrowserRouter([
   {
     // RootLayout mounts AuthProvider
     element: <RootLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: "/login",
