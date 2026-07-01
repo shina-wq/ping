@@ -32,11 +32,6 @@ export function UserMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent side={contentSide} align={contentAlign} className="w-56">
-        {/* <DropdownMenuLabel>
-          <p className="text-sm font-medium">{displayName}</p>
-          <p className="text-xs text-muted-foreground capitalize">{displayRole}</p>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator /> */}
         <DropdownMenuItem
           onClick={handleLogout}
           className="text-destructive focus:text-destructive cursor-pointer"

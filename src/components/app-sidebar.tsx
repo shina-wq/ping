@@ -56,12 +56,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="px-4 py-5">
-        <Logo />
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        <Logo size="sm" />
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="py-3">
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map(({ label, icon: Icon, href }) => (
@@ -70,7 +70,6 @@ export function AppSidebar() {
                     asChild
                     isActive={isNavItemActive(pathname, href)}
                     tooltip={label}
-                    className="font-[450] data-active:font-[550]"
                   >
                     <Link to={href}>
                       <Icon />
@@ -84,22 +83,22 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-2.5">
         <SidebarMenu>
           <SidebarMenuItem>
             <UserMenu
               contentSide="top"
               contentAlign="start"
               trigger={
-                <SidebarMenuButton size="lg" className="gap-3">
-                  <Avatar className="size-9">
-                    <AvatarFallback className="bg-primary/10 text-sm text-primary">
+                <SidebarMenuButton size="lg" className="gap-2">
+                  <Avatar className="size-7">
+                    <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-sm font-semibold">{displayName}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{displayRole}</p>
+                    <p className="truncate text-sm font-medium">{displayName}</p>
+                    <p className="truncate text-xs text-muted-foreground capitalize">{displayRole}</p>
                   </div>
                 </SidebarMenuButton>
               }
