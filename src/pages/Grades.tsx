@@ -1,41 +1,15 @@
 import { useMemo, useState } from "react";
-import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 import { usePageHeader } from "@/components/page-header-context";
 import { useGrades } from "@/hooks/use-grades";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/data-table";
+import { gradeColumns } from "@/components/grade-columns";
 import { getScoreClass } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-function GradesSkeleton() {
-  return (
-    <>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <TableRow key={i}>
-          <TableCell>
-            <div className="space-y-1.5">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-          </TableCell>
-          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-          <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-20" /></TableCell>
-          <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-12" /></TableCell>
-        </TableRow>
-      ))}
-    </>
-  );
-}
 
 export default function Grades() {
   usePageHeader({
@@ -43,11 +17,10 @@ export default function Grades() {
     description: "Your full academic performance record.",
   });
 
+  const navigate = useNavigate();
   const { data: grades, isLoading, error } = useGrades();
   const [query, setQuery] = useState("");
 
-  // The API doesn't support a `search` param on /grades, so this stays
-  // client-side over the fetched page.
   const filteredGrades = useMemo(() => {
     const q = query.toLowerCase();
     return (grades ?? []).filter(
@@ -72,10 +45,12 @@ export default function Grades() {
           {isLoading ? (
             <Skeleton className="h-9 w-20" />
           ) : (
-            <p className={cn(
-              "text-3xl font-semibold",
-              average === null ? "text-muted-foreground" : getScoreClass(average, 100)
-            )}>
+            <p
+              className={cn(
+                "text-3xl font-semibold",
+                average === null ? "text-muted-foreground" : getScoreClass(average, 100)
+              )}
+            >
               {average !== null ? `${average}%` : "—"}
             </p>
           )}
@@ -86,61 +61,19 @@ export default function Grades() {
       <Card className="p-0 py-0 shadow-xs">
         <CardHeader className="flex flex-row items-center justify-between border-b px-5 py-4 sm:px-6">
           <CardTitle className="text-base font-semibold">All Grades</CardTitle>
-          <SearchInput
-            value={query}
-            onChange={setQuery}
-            placeholder="Search grades..."
-          />
+          <SearchInput value={query} onChange={setQuery} placeholder="Search grades..." />
         </CardHeader>
         <CardContent className="px-0 py-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Assessment</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead className="text-right">Score</TableHead>
-                <TableHead className="text-right">Grade</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <GradesSkeleton />
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
-                    Failed to load grades. Please try again.
-                  </TableCell>
-                </TableRow>
-              ) : !filteredGrades.length ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
-                    {query ? "No grades match your search." : "No grades recorded yet."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredGrades.map((grade) => {
-                  const pct = Math.round((grade.score / grade.maxScore) * 100);
-                  return (
-                    <TableRow key={grade.id}>
-                      <TableCell>
-                        <p className="font-medium text-foreground">{grade.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(grade.gradedAt), "MMM d, yyyy")}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{grade.courseName}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        {grade.score} / {grade.maxScore}
-                      </TableCell>
-                      <TableCell className={cn("text-right font-semibold", getScoreClass(grade.score, grade.maxScore))}>
-                        {pct}%
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={gradeColumns}
+            data={filteredGrades}
+            getRowId={(g) => g.id}
+            isLoading={isLoading}
+            skeletonRowCount={6}
+            error={error ? "Failed to load grades. Please try again." : null}
+            emptyMessage={query ? "No grades match your search." : "No grades recorded yet."}
+            onRowClick={(g) => navigate(`/courses/${g.courseId}/grades`)}
+          />
         </CardContent>
       </Card>
     </div>

@@ -3,11 +3,11 @@ import { useState } from "react";
 import type { AssignmentStatus } from "@/api/assignments";
 import { useAssignments } from "@/hooks/use-assignments";
 import { usePageHeader } from "@/components/page-header-context";
-import { AssignmentList } from "@/components/assignments/assignment-list";
+import { AssignmentList } from "@/components/assignment-list";
 import {
   AssignmentCardSkeleton,
   AssignmentRowSkeleton,
-} from "@/components/assignments/assignment-row";
+} from "@/components/assignment-row";
 import { FilterTabs } from "@/components/ui/filter-tabs";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";

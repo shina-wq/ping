@@ -1,16 +1,16 @@
 import { useParams } from "react-router-dom";
 import { useCourseAssignments } from "@/hooks/use-assignments";
-import { AssignmentList } from "@/components/assignments/assignment-list";
-import { AssignmentRowSkeleton } from "@/components/assignments/assignment-row";
+import { AssignmentList } from "@/components/assignment-list";
+import { AssignmentRowSkeleton } from "@/components/assignment-row";
 import { Card, CardContent } from "@/components/ui/card";
 
 function CourseAssignmentsSkeleton() {
   return (
     <div className="space-y-10">
       <div className="space-y-4">
-        <div className="h-5 w-24 rounded bg-muted animate-pulse" />
-        <Card className="shadow-xs border border-border/50 p-0">
-          <CardContent className="p-0 divide-y divide-border/50">
+        <div className="h-5 w-24 animate-pulse rounded bg-muted" />
+        <Card className="border border-border/50 p-0 shadow-xs">
+          <CardContent className="divide-y divide-border/50 p-0">
             <div className="p-4 sm:px-6">
               <AssignmentRowSkeleton count={3} />
             </div>
@@ -50,6 +50,7 @@ export default function CourseAssignments() {
       <AssignmentList
         assignments={courseAssignments}
         emptyMessage="No assignments found for this course."
+        view="list"
       />
     </div>
   );

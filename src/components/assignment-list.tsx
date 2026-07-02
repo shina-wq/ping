@@ -1,8 +1,12 @@
+// src/components/assignments/assignment-list.tsx
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { CircleCheckBig, FileText } from "lucide-react";
 
-import { AssignmentRow, AssignmentCard, mapAssignment } from "@/components/assignments/assignment-row";
+import { AssignmentCard } from "@/components/assignment-row";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { STATUS_CONFIG } from "@/lib/constants";
 import type { Assignment, AssignmentStatus } from "@/api/assignments";
 
@@ -19,7 +23,57 @@ type AssignmentListProps = {
   view?: "card" | "list";
 };
 
+function useAssignmentColumns(): DataTableColumn<Assignment>[] {
+  return [
+    {
+      id: "title",
+      header: "Assignment",
+      cell: (a) => {
+        const isSubmitted = a.status === "submitted" || a.status === "graded";
+        const Icon = isSubmitted ? CircleCheckBig : FileText;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{a.title}</p>
+              <p className="truncate text-xs text-muted-foreground">{a.courseName}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      id: "due",
+      header: "Due",
+      hideBelow: "sm",
+      cell: (a) => (
+        <span className="text-sm text-muted-foreground">
+          {format(new Date(a.dueDate), "MMM d")}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      header: "Status",
+      align: "right",
+      cell: (a) => {
+        const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.upcoming;
+        return (
+          <Badge className={`rounded-full px-2.5 py-1 text-xs ${config.className}`}>
+            {config.label}
+          </Badge>
+        );
+      },
+    },
+  ];
+}
+
 export function AssignmentList({ assignments, emptyMessage = "No assignments found.", view = "card" }: AssignmentListProps) {
+  const navigate = useNavigate();
+  const columns = useAssignmentColumns();
+
   if (!assignments.length) {
     return (
       <div className="py-8 text-center text-sm text-muted-foreground">
@@ -63,12 +117,13 @@ export function AssignmentList({ assignments, emptyMessage = "No assignments fou
           </div>
         ) : (
           <Card className="p-0 shadow-xs">
-            <CardContent className="divide-y divide-border/60 p-0">
-              {group.map((a) => (
-                <div key={a.id} className="px-4 py-3 sm:px-6 hover:bg-muted/40 transition-colors">
-                  <AssignmentRow {...mapAssignment(a)} />
-                </div>
-              ))}
+            <CardContent className="px-0 py-0">
+              <DataTable
+                columns={columns}
+                data={group}
+                getRowId={(a) => a.id}
+                onRowClick={(a) => navigate(`/assignments/${a.id}`)}
+              />
             </CardContent>
           </Card>
         )}
