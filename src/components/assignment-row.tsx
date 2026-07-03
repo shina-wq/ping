@@ -48,7 +48,7 @@ export function AssignmentRow({ title, course, due, status, statusClass, isSubmi
   const Icon = isSubmitted ? CircleCheckBig : FileText;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 py-3.5">
       <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="size-4" />
       </div>
@@ -129,12 +129,11 @@ export function AssignmentCardSkeleton({count = 6}: {count?:number}) {
   );
 }
 
-// Skeleton
 export function AssignmentRowSkeleton({ count = 4 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3">
+        <div key={i} className="flex items-center gap-3 py-3.5">
           <Skeleton className="size-10 shrink-0 rounded-xl" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-36" />

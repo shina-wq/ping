@@ -1,6 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getCourses, getCourse, type ListCoursesParams } from "@/api/courses";
+import {
+  addCourse,
+  getCourses,
+  getCourse,
+  type CreateCourseInput,
+  type ListCoursesParams,
+} from "@/api/courses";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useCourses(params: ListCoursesParams = {}) {
@@ -16,5 +22,16 @@ export function useCourse(id: string) {
     queryKey: queryKeys.courses.detail(id),
     queryFn: () => getCourse(id),
     enabled: !!id,
+  });
+}
+
+export function useAddCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateCourseInput) => addCourse(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.all() });
+    },
   });
 }

@@ -4,6 +4,7 @@ import {
   GraduationCap,
   LayoutGrid,
   Settings,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -33,7 +34,7 @@ type NavItem = {
   href: string;
 };
 
-const navItems: NavItem[] = [
+const STUDENT_NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", icon: LayoutGrid, href: "/dashboard" },
   { label: "My Courses", icon: BookOpen, href: "/courses" },
   { label: "Assignments", icon: FileText, href: "/assignments" },
@@ -41,11 +42,23 @@ const navItems: NavItem[] = [
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
+const TEACHER_NAV_ITEMS: NavItem[] = [
+  { label: "Dashboard", icon: LayoutGrid, href: "/dashboard" },
+  { label: "My Courses", icon: BookOpen, href: "/courses" },
+  { label: "Assignments", icon: FileText, href: "/assignments" },
+  { label: "Grades", icon: GraduationCap, href: "/grades" },
+  { label: "Students", icon: Users, href: "/students" },
+  { label: "Settings", icon: Settings, href: "/settings" },
+];
+
+function getNavItems(role: string | undefined): NavItem[] {
+  return role === "teacher" ? TEACHER_NAV_ITEMS : STUDENT_NAV_ITEMS;
+}
+
 const isNavItemActive = (pathname: string, href: string) =>
   pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
 // Component
-
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -53,6 +66,7 @@ export function AppSidebar() {
   const displayName = user?.name ?? "";
   const displayRole = user?.role ?? "";
   const initials = user ? getInitials(user.name) : "";
+  const navItems = getNavItems(user?.role);
 
   return (
     <Sidebar>

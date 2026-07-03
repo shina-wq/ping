@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import RootLayout from "@/layouts/RootLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import RequireRole from "@/components/RequireRole";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Courses from "@/pages/courses/Courses";
@@ -10,6 +11,7 @@ import Assignments from "@/pages/assignments/Assignments";
 import Grades from "@/pages/Grades";
 import Notifications from "@/pages/Notifications";
 import Settings from "@/pages/Settings";
+import Students from "@/pages/Students";
 
 // Course details pages
 import CourseLayout from "@/layouts/CourseLayout";
@@ -26,7 +28,6 @@ import RouteErrorBoundary from "@/components/route-error-boundary";
 
 export const router = createBrowserRouter([
   {
-    // RootLayout mounts AuthProvider
     element: <RootLayout />,
     errorElement: <RouteErrorBoundary />,
     children: [
@@ -35,7 +36,6 @@ export const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        // ProtectedRoute for all dashboard routes behind authentication.
         element: <ProtectedRoute />,
         children: [
           {
@@ -60,10 +60,14 @@ export const router = createBrowserRouter([
                 ],
               },
               { path: "/assignments", element: <Assignments /> },
-              {path: "/assignments/:assignmentId", element: <AssignmentDetail />},
+              { path: "/assignments/:assignmentId", element: <AssignmentDetail /> },
               { path: "/grades", element: <Grades /> },
               { path: "/notifications", element: <Notifications /> },
               { path: "/settings", element: <Settings /> },
+              {
+                element: <RequireRole allow={["teacher", "admin"]} />,
+                children: [{ path: "/students", element: <Students /> }],
+              },
             ],
           },
         ],

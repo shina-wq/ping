@@ -23,7 +23,7 @@ type AssignmentListProps = {
   view?: "card" | "list";
 };
 
-function useAssignmentColumns(): DataTableColumn<Assignment>[] {
+export function useAssignmentColumns(): DataTableColumn<Assignment>[] {
   return [
     {
       id: "title",
@@ -43,6 +43,15 @@ function useAssignmentColumns(): DataTableColumn<Assignment>[] {
           </div>
         );
       },
+      skeleton: (
+        <div className="flex items-center gap-3">
+          <div className="size-9 rounded-lg bg-muted" />
+          <div className="space-y-1.5">
+            <div className="h-4 w-36 rounded bg-muted" />
+            <div className="h-3 w-24 rounded bg-muted" />
+          </div>
+        </div>
+      ),
     },
     {
       id: "due",
@@ -53,6 +62,7 @@ function useAssignmentColumns(): DataTableColumn<Assignment>[] {
           {format(new Date(a.dueDate), "MMM d")}
         </span>
       ),
+      skeleton: <div className="h-4 w-12 rounded bg-muted" />,
     },
     {
       id: "status",
@@ -66,6 +76,7 @@ function useAssignmentColumns(): DataTableColumn<Assignment>[] {
           </Badge>
         );
       },
+      skeleton: <div className="ml-auto h-6 w-20 rounded-full bg-muted" />,
     },
   ];
 }
