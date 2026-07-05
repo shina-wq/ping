@@ -34,6 +34,11 @@ import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { ApiError } from "@/lib/api-error";
 import type { CourseStatus } from "@/api/courses";
 
+import { useForm } from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+
+import { addCourseSchema, AddCourseValues } from "@/utils/courseSchema";
+
 type CourseFilter = "All Courses" | "In Progress" | "Completed" | "Not Started";
 const TABS: CourseFilter[] = ["All Courses", "In Progress", "Completed", "Not Started"];
 
@@ -91,43 +96,43 @@ function getCourseColumns(showProgress: boolean): DataTableColumn<CourseCardMode
 function AddCourseDialog() {
   const addCourse = useAddCourse();
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [term, setTerm] = useState("");
-  const [year, setYear] = useState("");
-  const [status, setStatus] = useState<CourseStatus>("active");
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: {errors},
+  } = useForm<AddCourseValues>({
+    resolver: zodResolver(addCourseSchema),
+    defaultValues: {title: "", term: "", year: "", status: "active"},
+  });
 
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      toast.error("Please enter a course title.");
-      return;
-    }
-
+  const onSubmit = async (data: AddCourseValues) => {
     try {
       const course = await addCourse.mutateAsync({
-        title: trimmedTitle,
-        term: term.trim() || undefined,
-        year: year ? Number(year) : undefined,
-        status,
+        title: data.title,
+        term: data.term || undefined,
+        year: data.year ? Number(data.year) : undefined,
+        status: data.status,
       });
 
       toast.success("Course created.");
       setOpen(false);
-      setTitle("");
-      setTerm("");
-      setYear("");
-      setStatus("active");
+      reset();
       window.location.assign(`/courses/${course.id}`);
     } catch (error) {
       const message = error instanceof ApiError ? error.message : "Failed to create course.";
       toast.error(message);
     }
-  }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) reset();
+      }}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="size-4" />
@@ -135,7 +140,7 @@ function AddCourseDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <form className="space-y-5" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>Add Course</DialogTitle>
             <DialogDescription>Create a new course and start building out the class workspace.</DialogDescription>
@@ -143,30 +148,52 @@ function AddCourseDialog() {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="course-title">Course title</Label>
-              <Input id="course-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Mathematics 101" />
+              <Label htmlFor="course-title">
+                Course title <span className="text-destructive">*</span>
+              </Label>
+              <Input id="course-title" placeholder="Mathematics 101" aria-invalid={!!errors.title} {...register("title")}/>
+              {errors.title && (
+                <p className="text-xs text-destructive">{errors.title.message}</p>
+              )}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="course-term">Term</Label>
-              <Input id="course-term" value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Fall" />
+              <Label htmlFor="course-term">
+                Term <span className="text-destructive">*</span>
+              </Label>
+              <Input id="course-term" placeholder="Fall" aria-invalid={!!errors.term} {...register("term")}/>
+              {errors.term && (
+                <p className="text-xs text-destructive">{errors.term.message}</p>
+              )}
             </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="course-year">Year</Label>
-                <Input id="course-year" inputMode="numeric" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2024" />
+                <Label htmlFor="course-year">
+                  Year <span className="text-destructive">*</span>
+                </Label>
+                <Input id="course-year" inputMode="numeric" placeholder="2024" aria-invalid={!!errors.year} {...register("year")}/>
+                {errors.year && (
+                  <p className="text-xs text-destructive">{errors.year.message}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="course-status">Status</Label>
+                <Label htmlFor="course-status">
+                  Status <span className="text-destructive">*</span>
+                </Label>
                 <select
                   id="course-status"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as CourseStatus)}
+                  aria-invalid={!!errors.status}
                   className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  {...register("status")}
                 >
                   <option value="active">Active</option>
                   <option value="completed">Completed</option>
                   <option value="archived">Archived</option>
                 </select>
+                {errors.status && (
+                  <p className="text-xs text-destructive">{errors.status.message}</p>
+                )}
               </div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-// src/components/assignments/assignment-list.tsx
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { CircleCheckBig, FileText } from "lucide-react";

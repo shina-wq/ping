@@ -44,17 +44,20 @@ export function mapAssignment(a: Assignment): AssignmentRow {
 }
 
 // Component
-export function AssignmentRow({ title, course, due, status, statusClass, isSubmitted }: AssignmentRow) {
+export function AssignmentRow({ id, title, course, due, status, statusClass, isSubmitted }: AssignmentRow) {
   const Icon = isSubmitted ? CircleCheckBig : FileText;
 
   return (
-    <div className="flex items-center gap-3 py-3.5">
+    <Link
+      to={`/assignments/${id}`}
+      className="flex items-start gap-3 py-3 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded-lg"
+    >
       <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="size-4" />
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{title}</p>
+        <p className="line-clamp-2 text-sm font-semibold text-foreground">{title}</p>
         <p className="truncate text-xs text-muted-foreground">{course}</p>
       </div>
 
@@ -64,7 +67,28 @@ export function AssignmentRow({ title, course, due, status, statusClass, isSubmi
           {status}
         </Badge>
       </div>
-    </div>
+    </Link>
+  );
+}
+
+// Skeleton
+export function AssignmentRowSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-start gap-3 py-3">
+          <Skeleton className="size-10 shrink-0 rounded-xl" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <Skeleton className="h-3 w-10" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -125,26 +149,6 @@ export function AssignmentCardSkeleton({count = 6}: {count?:number}) {
         </div>
       </Card>
     ))}
-    </>
-  );
-}
-
-export function AssignmentRowSkeleton({ count = 4 }: { count?: number }) {
-  return (
-    <>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-3.5">
-          <Skeleton className="size-10 shrink-0 rounded-xl" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-36" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <Skeleton className="h-3 w-10" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-          </div>
-        </div>
-      ))}
     </>
   );
 }

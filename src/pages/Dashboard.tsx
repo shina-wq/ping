@@ -161,7 +161,7 @@ export default function Dashboard() {
         <StatsGrid stats={teacherStats} isLoading={statsLoading} error={statsError} />
 
         {/* My Courses + Upcoming Assignments */}
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <section className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Card className="p-0 py-0 shadow-xs">
             <SectionCardHeader title="My Courses" actionLabel="View all" actionHref="/courses" />
             <CardContent className="divide-y px-5 py-2 sm:px-6">
@@ -181,7 +181,7 @@ export default function Dashboard() {
 
           <Card className="p-0 py-0 shadow-xs">
             <SectionCardHeader title="Upcoming Assignments" actionLabel="View all" actionHref="/assignments" />
-            <CardContent className="divide-y px-5 py-2 sm:px-6">
+            <CardContent className="divide-y px-2 py-2 sm:px-6">
               {assignmentsLoading ? (
                 <AssignmentRowSkeleton count={4} />
               ) : assignmentsError ? (
@@ -251,70 +251,51 @@ export default function Dashboard() {
 
       {/* Courses + Assignments */}
       <section className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-foreground">My Courses</h2>
-            <Link to="/courses" className="text-sm font-medium text-primary hover:underline">
-              View all
-            </Link>
-          </div>
-          {coursesLoading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <CourseCardSkeleton count={2} />
-            </div>
-          ) : coursesError ? (
-            <SectionError />
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {dashboardCourses.map((course) => (
-                <CourseCard key={course.id} {...course} />
-              ))}
-            </div>
-          )}
-        </div>
+        <Card className="p-0 py-0 shadow-xs">
+          <SectionCardHeader title="My Courses" actionLabel="View all" actionHref="/courses" />
+          <CardContent className="grid grid-cols-1 gap-3 px-5 py-5 sm:grid-cols-2 sm:px-6">
+            {coursesLoading ? (
+              <CourseCardSkeleton count={2} size="sm" />
+            ) : coursesError ? (
+              <div className="sm:col-span-2"><SectionError /></div>
+            ) : (
+              dashboardCourses.map((course) => <CourseCard key={course.id} {...course} size="sm" />)
+            )}
+          </CardContent>
+        </Card>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-foreground">Upcoming Assignments</h2>
-            <Link to="/assignments" className="text-sm font-medium text-primary hover:underline">
-              View all
-            </Link>
-          </div>
-          <DataTable
-            columns={assignmentColumns}
-            data={dashboardAssignments}
-            getRowId={(assignment) => assignment.id}
-            isLoading={assignmentsLoading}
-            skeletonRowCount={4}
-            rowClassName={() => undefined}
-            error={assignmentsError ? <SectionError /> : null}
-            emptyMessage="No upcoming assignments right now."
-            onRowClick={(assignment) => navigate(`/assignments/${assignment.id}`)}
-            className="rounded-2xl border border-border bg-card shadow-xs"
-          />
-        </div>
+        <Card className="p-0 py-0 shadow-xs">
+          <SectionCardHeader title="Upcoming Assignments" actionLabel="View all" actionHref="/assignments" />
+          <CardContent className="divide-y px-2 py-2 sm:px-6">
+            {assignmentsLoading ? (
+              <AssignmentRowSkeleton count={4} />
+            ) : assignmentsError ? (
+              <SectionError />
+            ) : dashboardAssignments.length ? (
+              dashboardAssignments.map((a) => <AssignmentRow key={a.id} {...mapAssignment(a)} />)
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">No upcoming assignments right now.</p>
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       {/* Grades + Reminders */}
       <section className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-foreground">Recent Grades</h2>
-            <Link to="/grades" className="text-sm font-medium text-primary hover:underline">
-              Full gradebook
-            </Link>
-          </div>
-          <DataTable
-            columns={gradeColumns}
-            data={grades}
-            getRowId={(grade) => grade.id}
-            isLoading={gradesLoading}
-            skeletonRowCount={4}
-            error={gradesError ? <SectionError /> : null}
-            emptyMessage="No recent grades yet."
-            className="rounded-2xl border border-border bg-card shadow-xs"
-          />
-        </div>
+        <Card className="p-0 py-0 shadow-xs">
+          <SectionCardHeader title="Recent Grades" actionLabel="Full gradebook" actionHref="/grades" />
+          <CardContent className="px-0 py-0">
+            <DataTable
+              columns={gradeColumns}
+              data={grades}
+              getRowId={(grade) => grade.id}
+              isLoading={gradesLoading}
+              skeletonRowCount={4}
+              error={gradesError ? <SectionError /> : null}
+              emptyMessage="No recent grades yet."
+            />
+          </CardContent>
+        </Card>
 
         <Card className="p-0 py-0 shadow-xs">
           <SectionCardHeader title="Reminders" actionLabel="See all" actionHref="/reminders" />
