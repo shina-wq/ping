@@ -32,6 +32,17 @@ const TYPE_LABEL: Record<LessonType, string> = {
     quiz: "Quiz",
 };
 
+function getStatusIconConfig(status: LessonStatus, lessonId: string) {
+    const config = STATUS_ICON[status];
+    if (!config) {
+        console.warn(
+            `Unknown lesson status "${status}" for lesson ${lessonId}. Falling back to "locked".`
+        );
+        return STATUS_ICON.locked;
+    }
+    return config;
+}
+
 function ModuleDetailSkeleton() {
     return (
         <div className="flex min-h-0 flex-col gap-6 lg:flex-row lg:gap-10">
@@ -129,7 +140,7 @@ export default function CourseModuleDetail() {
                 {/* Lesson list */}
                 <nav className="space-y-0.5">
                     {lessons.map((lesson) => {
-                        const {icon: StatusIcon, className: iconClass } = STATUS_ICON[lesson.status];
+                        const {icon: StatusIcon, className: iconClass } = getStatusIconConfig(lesson.status, lesson.id);
                         const isActive = lesson.id === activeLesson.id;
                         const isLocked = lesson.status === "locked";
 
