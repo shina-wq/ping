@@ -47,7 +47,7 @@ export function usePageHeader(config: PageHeaderConfig) {
     return () => setOverride(null);
     // Depend on values, not the config object reference
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.title, config.description, setOverride]);
+  }, [config.title, config.description, config.actions, setOverride]);
 }
 
 export function PageHeaderSlot() {
@@ -57,5 +57,5 @@ export function PageHeaderSlot() {
 
   if (!header || !header.title) return null;
 
-  return <AppHeader title={header.title} description={header.description} />;
+  return <AppHeader title={header.title} description={header.description} actions={header.actions} />;
 }

@@ -53,6 +53,18 @@ export function ReminderCard({ title, detail, isUrgent }: ReminderCard) {
   );
 }
 
+export function ReminderEmptyState() {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-8 text-center">
+      <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Clock3 className="size-4" />
+      </div>
+      <p className="text-sm font-medium text-foreground">No reminders today</p>
+      <p className="text-xs text-muted-foreground">You’re all caught up for now.</p>
+    </div>
+  );
+}
+
 // Skeleton
 export function ReminderCardSkeleton({ count = 3 }: { count?: number }) {
   return (
