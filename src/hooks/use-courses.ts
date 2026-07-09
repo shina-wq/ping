@@ -1,12 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   addCourse,
   getCourses,
   getCourse,
+  updateCourse,
   type CreateCourseInput,
   type ListCoursesParams,
+  type UpdateCourseInput,
 } from "@/api/courses";
+import { useResourceMutation } from "@/hooks/use-resource-mutation";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useCourses(params: ListCoursesParams = {}) {
@@ -25,13 +28,18 @@ export function useCourse(id: string) {
   });
 }
 
-export function useAddCourse() {
-  const queryClient = useQueryClient();
+// Mutations
 
-  return useMutation({
-    mutationFn: (input: CreateCourseInput) => addCourse(input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses.all() });
-    },
-  });
+export function useAddCourse() {
+  return useResourceMutation(
+    (input: CreateCourseInput) => addCourse(input),
+    () => [["courses"]]
+  );
+}
+
+export function useUpdateCourse() {
+  return useResourceMutation(
+    ({ id, input }: { id: string; input: UpdateCourseInput }) => updateCourse(id, input),
+    ({ id }) => [queryKeys.courses.detail(id), ["courses"]]
+  );
 }

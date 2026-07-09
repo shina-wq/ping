@@ -1,12 +1,12 @@
-// src/pages/courses/Courses.tsx
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { ArrowUpRight, Archive, MoreHorizontal, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
+import type { Course, CourseStatus } from "@/api/courses";
 import { useAuth } from "@/contexts/auth-context";
 
-import { useAddCourse, useCourses } from "@/hooks/use-courses";
+import { useCourses, useUpdateCourse } from "@/hooks/use-courses";
 import { usePageHeader } from "@/components/page-header-context";
 import {
   CourseCard,
@@ -14,39 +14,46 @@ import {
   mapCourse,
   type CourseCard as CourseCardModel,
 } from "@/components/course-card";
+import { CourseFormDialog } from "@/components/course-form-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { createRowActionsColumn } from "@/components/row-actions-column"; // adjust path if needed
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { FilterTabs } from "@/components/ui/filter-tabs";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 import { SearchInput } from "@/components/ui/search-input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DataTable, type DataTableColumn } from "@/components/data-table";
-import { ApiError } from "@/lib/api-error";
-import type { CourseStatus } from "@/api/courses";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-import { useForm } from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
 
-import { addCourseSchema, AddCourseValues } from "@/utils/courseSchema";
+type CourseFilter = "All Courses" | "In Progress" | "Completed" | "Not Started" | "Archived";
 
-type CourseFilter = "All Courses" | "In Progress" | "Completed" | "Not Started";
-const TABS: CourseFilter[] = ["All Courses", "In Progress", "Completed", "Not Started"];
+const STUDENT_TABS: CourseFilter[] = ["All Courses", "In Progress", "Completed", "Not Started"];
+const TEACHER_TABS: CourseFilter[] = [...STUDENT_TABS, "Archived"];
 
 const FILTER_TO_STATUS: Partial<Record<CourseFilter, CourseStatus>> = {
   Completed: "completed",
+  Archived: "archived",
 };
 
-function getCourseColumns(showProgress: boolean): DataTableColumn<CourseCardModel>[] {
+type CourseColumnsOptions = {
+  showProgress: boolean;
+  isTeacher: boolean;
+  onEdit: (row: CourseCardModel) => void;
+  onArchive: (row: CourseCardModel) => void;
+};
+
+function getCourseColumns({
+  showProgress,
+  isTeacher,
+  onEdit,
+  onArchive,
+}: CourseColumnsOptions): DataTableColumn<CourseCardModel>[] {
   const columns: DataTableColumn<CourseCardModel>[] = [
     {
       id: "course",
@@ -90,125 +97,48 @@ function getCourseColumns(showProgress: boolean): DataTableColumn<CourseCardMode
     ),
   });
 
+  if (isTeacher) {
+    columns.push(
+      createRowActionsColumn<CourseCardModel>({
+        onEdit,
+        onDelete: onArchive,
+        deleteLabel: "Archive",
+        deleteIcon: Archive,
+      })
+    );
+  }
+
   return columns;
 }
 
-function AddCourseDialog() {
-  const addCourse = useAddCourse();
-  const [open, setOpen] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: {errors},
-  } = useForm<AddCourseValues>({
-    resolver: zodResolver(addCourseSchema),
-    defaultValues: {title: "", term: "", year: "", status: "active"},
-  });
-
-  const onSubmit = async (data: AddCourseValues) => {
-    try {
-      const course = await addCourse.mutateAsync({
-        title: data.title,
-        term: data.term || undefined,
-        year: data.year ? Number(data.year) : undefined,
-        status: data.status,
-      });
-
-      toast.success("Course created.");
-      setOpen(false);
-      reset();
-      window.location.assign(`/courses/${course.id}`);
-    } catch (error) {
-      const message = error instanceof ApiError ? error.message : "Failed to create course.";
-      toast.error(message);
-    }
-  };
-
+// Card-view actions dropdown (edit/archive). Table view uses createRowActionsColumn instead.
+function CourseCardActions({
+  course,
+  onEdit,
+  onArchive,
+}: {
+  course: Course;
+  onEdit: () => void;
+  onArchive: () => void;
+}) {
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) reset();
-      }}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="size-4" />
-          Add Course
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${course.title}`}>
+          <MoreHorizontal className="size-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>
-            <DialogTitle>Add Course</DialogTitle>
-            <DialogDescription>Create a new course and start building out the class workspace.</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="course-title">
-                Course title <span className="text-destructive">*</span>
-              </Label>
-              <Input id="course-title" placeholder="Mathematics 101" aria-invalid={!!errors.title} {...register("title")}/>
-              {errors.title && (
-                <p className="text-xs text-destructive">{errors.title.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="course-term">
-                Term <span className="text-destructive">*</span>
-              </Label>
-              <Input id="course-term" placeholder="Fall" aria-invalid={!!errors.term} {...register("term")}/>
-              {errors.term && (
-                <p className="text-xs text-destructive">{errors.term.message}</p>
-              )}
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="course-year">
-                  Year <span className="text-destructive">*</span>
-                </Label>
-                <Input id="course-year" inputMode="numeric" placeholder="2024" aria-invalid={!!errors.year} {...register("year")}/>
-                {errors.year && (
-                  <p className="text-xs text-destructive">{errors.year.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="course-status">
-                  Status <span className="text-destructive">*</span>
-                </Label>
-                <select
-                  id="course-status"
-                  aria-invalid={!!errors.status}
-                  className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                  {...register("status")}
-                >
-                  <option value="active">Active</option>
-                  <option value="completed">Completed</option>
-                  <option value="archived">Archived</option>
-                </select>
-                {errors.status && (
-                  <p className="text-xs text-destructive">{errors.status.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={addCourse.isPending}>
-              Create Course
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onEdit}>
+          <Pencil className="size-4" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onClick={onArchive}>
+          <Archive className="size-4" />
+          Archive
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -220,9 +150,28 @@ export default function Courses() {
   const [view, setView] = useState<ViewMode>("card");
   const [query, setQuery] = useState("");
 
+  // Edit/archive dialog state — holds the raw Course so the form can prefill
+  // and the confirm dialog can reference the title.
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [archivingCourse, setArchivingCourse] = useState<Course | null>(null);
+  const updateCourse = useUpdateCourse();
+
   const showProgress = !isTeacher;
-  const courseColumns = useMemo(() => getCourseColumns(showProgress), [showProgress]);
-  const headerActions = useMemo(() => (isTeacher ? <AddCourseDialog /> : undefined), [isTeacher]);
+  const tabs = isTeacher ? TEACHER_TABS : STUDENT_TABS;
+
+  const headerActions = useMemo(
+    () =>
+      isTeacher ? (
+        <CourseFormDialog
+          trigger={
+            <Button>
+              <Plus className="size-4"/> Add Course
+            </Button>
+          }
+        />
+      ) : undefined,
+      [isTeacher]
+  );
 
   usePageHeader({
     title: "My Courses",
@@ -236,20 +185,43 @@ export default function Courses() {
   });
 
   const filteredCourses = (courses ?? []).filter((c) => {
+    if (filter === "Archived") return c.status === "archived";
+    if (c.status === "archived") return false; // hide archived everywhere else
     if (filter === "In Progress") return c.status === "active" && c.progress > 0 && c.progress < 100;
     if (filter === "Not Started") return c.status === "active" && c.progress === 0;
     return true;
   });
 
+  // Lookup for edit/archive handlers: table + card only carry the mapped
+  // view-model, so we resolve back to the raw Course by id when needed.
+  const courseById = new Map(filteredCourses.map((c) => [c.id, c]));
+
+  function handleEdit(row: { id: string }) {
+    const raw = courseById.get(row.id);
+    if (raw) setEditingCourse(raw);
+  }
+
+  function handleArchiveRequest(row: { id: string }) {
+    const raw = courseById.get(row.id);
+    if (raw) setArchivingCourse(raw);
+  }
+
   const isEmpty = !isLoading && !error && !courses?.length;
   const isNoMatch = !isLoading && !error && !!courses?.length && !filteredCourses.length;
   const mappedCourses = filteredCourses.map(mapCourse);
+
+  const courseColumns = getCourseColumns({
+    showProgress,
+    isTeacher,
+    onEdit: handleEdit,
+    onArchive: handleArchiveRequest,
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterTabs
-          tabs={TABS}
+          tabs={tabs}
           activeTab={filter}
           onTabChange={setFilter}
           className={isLoading ? "pointer-events-none opacity-50" : undefined}
@@ -274,7 +246,20 @@ export default function Courses() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {mappedCourses.map((c) => (
-              <CourseCard key={c.id} {...c} showProgress={showProgress} />
+              <CourseCard
+                key={c.id}
+                {...c}
+                showProgress={showProgress}
+                actions={
+                  isTeacher ? (
+                    <CourseCardActions
+                      course={courseById.get(c.id)!}
+                      onEdit={() => handleEdit(c)}
+                      onArchive={() => handleArchiveRequest(c)}
+                    />
+                  ) : undefined
+                }
+              />
             ))}
           </div>
         )
@@ -292,6 +277,27 @@ export default function Courses() {
           />
         </Card>
       )}
+
+      {/* Edit dialog — controlled, no visible trigger (opened via row/card actions) */}
+      <CourseFormDialog
+        course={editingCourse ?? undefined}
+        open={!!editingCourse}
+        onOpenChange={(next) => !next && setEditingCourse(null)}
+      />
+
+      {/* Archive confirm dialog */}
+      <ConfirmDeleteDialog
+        open={!!archivingCourse}
+        onOpenChange={(next) => !next && setArchivingCourse(null)}
+        title="Archive Course"
+        description={`This will hide "${archivingCourse?.title}" from active views. You can restore it later by editing its status.`}
+        confirmLabel="Archive"
+        onConfirm={async () => {
+          if (!archivingCourse) return;
+          await updateCourse.mutateAsync({ id: archivingCourse.id, input: { status: "archived" } });
+          toast.success("Course archived.");
+        }}
+      />
     </div>
   );
 }
