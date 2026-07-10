@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
     ArrowLeft,
     ArrowRight,
@@ -47,7 +47,6 @@ function ModuleDetailSkeleton() {
     return (
         <div className="flex min-h-0 flex-col gap-6 lg:flex-row lg:gap-10">
             <aside className="w-full shrink-0 lg:w-68">
-                <Skeleton className="mb-5 h-5 w-32" />
                 <Skeleton className="mb-3 h-24 w-full rounded-xl" />
                 <div className="space-y-1">
                     {Array.from({ length: 4 }).map((_, i) => (
@@ -117,15 +116,6 @@ export default function CourseModuleDetail() {
         <div className="flex min-h-0 flex-col gap-6 lg:flex-row lg:gap-10">
             {/* Lesson sidebar */}
             <aside className="w-full shrink-0 lg:sticky lg:top-6 lg:w-68 lg:self-start">
-                {/* Back link */}
-                <Link
-                    to={`/courses/${courseId}/modules`}
-                    className="mb-5 flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                    <ArrowLeft className="size-4"/>
-                    Back to Modules
-                </Link>
-
                 {/* Progress card */}
                 <div className="mb-3 rounded-xl border border-border bg-card p-4 shadow-xs">
                     <p className="mb-0.5 text-sm font-semibold text-foreground">

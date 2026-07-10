@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/contexts/auth-context";
 import { useCourse, useUpdateCourse } from "@/hooks/use-courses";
+import { useModules } from "@/hooks/use-modules";
 import { CourseFormDialog } from "@/components/course-form-dialog";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,8 +75,9 @@ function CourseLayoutSkeleton() {
 }
 
 export default function CourseLayout() {
-  const { courseId } = useParams<{ courseId: string }>();
+  const { courseId, moduleId } = useParams<{ courseId: string; moduleId?: string }>();
   const { data: course, isLoading } = useCourse(courseId || "");
+  const { data: modules } = useModules(courseId || "");
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -90,6 +92,9 @@ export default function CourseLayout() {
   if (!course) {
     return <p className="p-8 text-center text-muted-foreground">Course not found.</p>;
   }
+
+  // Derive module metadata when on a module detail page
+  const moduleMeta = moduleId ? modules?.find((m) => m.id === moduleId) : null;
 
   // Active tab derived from location pathname
   const currentPath = location.pathname.split("/").pop() || "modules";
@@ -131,7 +136,20 @@ export default function CourseLayout() {
             My Courses
           </Link>
           <ChevronRight className="mx-1 size-4" />
-          <span className="text-primary-foreground">{course.title}</span>
+          {moduleMeta ? (
+            <>
+              <Link
+                to={`/courses/${courseId}/modules`}
+                className="hover:text-primary-foreground"
+              >
+                {course.title}
+              </Link>
+              <ChevronRight className="mx-1 size-4" />
+              <span className="text-primary-foreground">{moduleMeta.title}</span>
+            </>
+          ) : (
+            <span className="text-primary-foreground">{course.title}</span>
+          )}
         </div>
 
         <h1 className="mb-2 text-3xl font-bold tracking-tight">{course.title}</h1>
