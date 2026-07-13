@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 type CourseFilter = "All Courses" | "In Progress" | "Completed" | "Not Started" | "Archived";
 
@@ -149,6 +150,7 @@ export default function Courses() {
   const [filter, setFilter] = useState<CourseFilter>("All Courses");
   const [view, setView] = useState<ViewMode>("card");
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 300);
 
   // Edit/archive dialog state — holds the raw Course so the form can prefill
   // and the confirm dialog can reference the title.
@@ -180,7 +182,7 @@ export default function Courses() {
   });
 
   const { data: courses, isLoading, error } = useCourses({
-    search: query || undefined,
+    search: debouncedQuery || undefined,
     status: FILTER_TO_STATUS[filter],
   });
 

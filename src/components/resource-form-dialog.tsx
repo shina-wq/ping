@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useForm, Controller, type DefaultValues, type FieldValues, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -75,6 +75,10 @@ export function ResourceFormDialog<TSchema extends ZodType<FieldValues, FieldVal
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TInput, unknown, TOutput>({ resolver: zodResolver(schema as never), defaultValues });
+
+  useEffect(() => {
+    if (dialogOpen) reset(defaultValues);
+  }, [dialogOpen]);
 
   const fieldErrors = errors as Record<string, { message?: string } | undefined>;
 
