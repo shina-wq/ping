@@ -151,6 +151,26 @@
 
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+
+  /* Course Accents (cycled through on dashboard and courses page) */
+  --course-accent-0: var(--primary);
+  --course-accent-1: oklch(0.628 0.134 223.12); /* sky-500 */
+  --course-accent-2: oklch(0.643 0.149 142.73); /* emerald-500 */
+  --course-accent-3: oklch(0.48 0.20 270); /* violet-500 */
+  --course-accent-4: oklch(0.64 0.16 48); /* orange-500 */
+
+  /* Stat Card Accents */
+  --stat-accent-1-bg: oklch(0.511 0.262 276.966 / 10%);
+  --stat-accent-1-fg: oklch(0.511 0.262 276.966);
+
+  --stat-accent-2-bg: oklch(0.70 0.19 38 / 10%);
+  --stat-accent-2-fg: oklch(0.70 0.19 38);
+
+  --stat-accent-3-bg: oklch(0.72 0.17 145 / 10%);
+  --stat-accent-3-fg: oklch(0.45 0.17 145);
+
+  --stat-accent-4-bg: oklch(0.65 0.22 12 / 10%);
+  --stat-accent-4-fg: oklch(0.65 0.22 12);
 }
 
 .dark {
@@ -218,6 +238,26 @@
 
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+
+  /* Dark mode default Course Accents */
+  --course-accent-0: var(--primary);
+  --course-accent-1: oklch(0.68 0.12 220); /* sky-400 equivalent */
+  --course-accent-2: oklch(0.72 0.13 140); /* emerald-400 */
+  --course-accent-3: oklch(0.64 0.15 270); /* violet-400 */
+  --course-accent-4: oklch(0.72 0.13 45); /* orange-400 */
+
+  /* Dark mode default Stat Card Accents */
+  --stat-accent-1-bg: oklch(0.585 0.262 276.966 / 15%);
+  --stat-accent-1-fg: oklch(0.585 0.262 276.966);
+
+  --stat-accent-2-bg: oklch(0.74 0.19 38 / 15%);
+  --stat-accent-2-fg: oklch(0.74 0.19 38);
+
+  --stat-accent-3-bg: oklch(0.76 0.17 145 / 15%);
+  --stat-accent-3-fg: oklch(0.76 0.17 145);
+
+  --stat-accent-4-bg: oklch(0.72 0.20 12 / 15%);
+  --stat-accent-4-fg: oklch(0.72 0.20 12);
 }
 
 @layer base {
@@ -232,4 +272,64 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Teacher Dashboard Theme (Charcoal Black Highlights) */
+.theme-teacher {
+  --brand: oklch(0.145 0 0);
+  --primary: oklch(0.145 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --ring: var(--primary);
+
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.95 0 0);
+  --sidebar-accent-foreground: oklch(0.145 0 0);
+
+  /* All course accents are black for teachers */
+  --course-accent-0: oklch(0.145 0 0);
+  --course-accent-1: oklch(0.145 0 0);
+  --course-accent-2: oklch(0.145 0 0);
+  --course-accent-3: oklch(0.145 0 0);
+  --course-accent-4: oklch(0.145 0 0);
+
+  /* All stat card accents are black for teachers */
+  --stat-accent-1-bg: oklch(0.145 0 0 / 8%);
+  --stat-accent-1-fg: oklch(0.145 0 0);
+  --stat-accent-2-bg: oklch(0.145 0 0 / 8%);
+  --stat-accent-2-fg: oklch(0.145 0 0);
+  --stat-accent-3-bg: oklch(0.145 0 0 / 8%);
+  --stat-accent-3-fg: oklch(0.145 0 0);
+  --stat-accent-4-bg: oklch(0.145 0 0 / 8%);
+  --stat-accent-4-fg: oklch(0.145 0 0);
+}
+
+:is(.dark, .dark *) .theme-teacher,
+.theme-teacher:is(.dark, .dark *) {
+  --brand: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.145 0 0);
+  --ring: var(--primary);
+
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.24 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+
+  /* All course accents are white for teachers in dark mode */
+  --course-accent-0: oklch(0.985 0 0);
+  --course-accent-1: oklch(0.985 0 0);
+  --course-accent-2: oklch(0.985 0 0);
+  --course-accent-3: oklch(0.985 0 0);
+  --course-accent-4: oklch(0.985 0 0);
+
+  /* All stat card accents are white for teachers in dark mode */
+  --stat-accent-1-bg: oklch(0.985 0 0 / 12%);
+  --stat-accent-1-fg: oklch(0.985 0 0);
+  --stat-accent-2-bg: oklch(0.985 0 0 / 12%);
+  --stat-accent-2-fg: oklch(0.985 0 0);
+  --stat-accent-3-bg: oklch(0.985 0 0 / 12%);
+  --stat-accent-3-fg: oklch(0.985 0 0);
+  --stat-accent-4-bg: oklch(0.985 0 0 / 12%);
+  --stat-accent-4-fg: oklch(0.985 0 0);
 }

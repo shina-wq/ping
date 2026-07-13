@@ -1,11 +1,27 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { PageHeaderSlot } from "@/components/page-header-context";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function DashboardLayout() {
+  const { user } = useAuth();
+  const isTeacher = user?.role === "teacher";
+
+  useEffect(() => {
+    if (isTeacher) {
+      document.body.classList.add("theme-teacher");
+    } else {
+      document.body.classList.remove("theme-teacher");
+    }
+    return () => {
+      document.body.classList.remove("theme-teacher");
+    };
+  }, [isTeacher]);
+
   return (
     <TooltipProvider>
       <SidebarProvider>

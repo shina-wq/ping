@@ -71,7 +71,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Logo size="sm" />
+        <Logo size="sm" className="text-sidebar-foreground" />
       </SidebarHeader>
 
       <SidebarContent>

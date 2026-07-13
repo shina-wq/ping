@@ -2,11 +2,11 @@ import type { AssignmentStatus } from "@/api/assignments";
 
 /** Accent colours cycled through for course cards — API doesn't provide colour info. */
 export const COURSE_ACCENTS = [
-  "bg-primary",
-  "bg-sky-500",
-  "bg-emerald-500",
-  "bg-violet-500",
-  "bg-orange-500",
+  "bg-[var(--course-accent-0)]",
+  "bg-[var(--course-accent-1)]",
+  "bg-[var(--course-accent-2)]",
+  "bg-[var(--course-accent-3)]",
+  "bg-[var(--course-accent-4)]",
 ];
 
 /** Badge styling per assignment status, shared by Dashboard and Assignments pages. */
