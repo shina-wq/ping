@@ -1,8 +1,21 @@
-import { Outlet, useParams, Link, useLocation } from "react-router-dom";
-import { ChevronRight, BookOpen, FileText, Clock } from "lucide-react";
+import { useState } from "react";
+import { Outlet, useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import { ChevronRight, BookOpen, FileText, Clock, MoreVertical, Pencil, Archive } from "lucide-react";
+import { toast } from "sonner";
 
-import { useCourse } from "@/hooks/use-courses";
+import { useAuth } from "@/contexts/auth-context";
+import { useCourse, useUpdateCourse } from "@/hooks/use-courses";
+import { useModules } from "@/hooks/use-modules";
+import { CourseFormDialog } from "@/components/course-form-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -57,23 +70,31 @@ function CourseLayoutSkeleton() {
               ))}
             </div>
         </div>
-        <div>
-
-      </div>
     </div>
   )
 }
 
 export default function CourseLayout() {
-  const { courseId } = useParams<{ courseId: string }>();
+  const { courseId, moduleId } = useParams<{ courseId: string; moduleId?: string }>();
   const { data: course, isLoading } = useCourse(courseId || "");
+  const { data: modules } = useModules(courseId || "");
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isTeacher = user?.role === "teacher";
 
-  if (isLoading)return <CourseLayoutSkeleton />;
+  const updateCourse = useUpdateCourse();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+
+  if (isLoading) return <CourseLayoutSkeleton />;
 
   if (!course) {
     return <p className="p-8 text-center text-muted-foreground">Course not found.</p>;
   }
+
+  // Derive module metadata when on a module detail page
+  const moduleMeta = moduleId ? modules?.find((m) => m.id === moduleId) : null;
 
   // Active tab derived from location pathname
   const currentPath = location.pathname.split("/").pop() || "modules";
@@ -81,13 +102,54 @@ export default function CourseLayout() {
   return (
     <div className="-mx-4 -mt-6 flex flex-col lg:-mx-8">
       {/* Header */}
-      <div className="bg-primary px-6 py-8 text-primary-foreground sm:px-10 lg:px-12">
+      <div className="relative bg-primary px-6 py-8 text-primary-foreground sm:px-10 lg:px-12">
+        {/* Teacher actions */}
+        {isTeacher && (
+          <div className="absolute right-6 top-6 sm:right-10 lg:right-12">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Course actions"
+                  className="text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground"
+                >
+                  <MoreVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <Pencil className="size-4" />
+                  Edit Course
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={() => setIsArchiving(true)}>
+                  <Archive className="size-4" />
+                  Archive Course
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
         <div className="mb-4 mt-4 flex items-center text-sm font-medium text-primary-foreground/80">
           <Link to="/courses" className="hover:text-primary-foreground">
             My Courses
           </Link>
           <ChevronRight className="mx-1 size-4" />
-          <span className="text-primary-foreground">{course.title}</span>
+          {moduleMeta ? (
+            <>
+              <Link
+                to={`/courses/${courseId}/modules`}
+                className="hover:text-primary-foreground"
+              >
+                {course.title}
+              </Link>
+              <ChevronRight className="mx-1 size-4" />
+              <span className="text-primary-foreground">{moduleMeta.title}</span>
+            </>
+          ) : (
+            <span className="text-primary-foreground">{course.title}</span>
+          )}
         </div>
 
         <h1 className="mb-2 text-3xl font-bold tracking-tight">{course.title}</h1>
@@ -145,6 +207,23 @@ export default function CourseLayout() {
       <div className="flex-1 overflow-auto bg-background p-6 sm:p-10 lg:px-12">
         <Outlet />
       </div>
+
+      {/* Edit dialog */}
+      <CourseFormDialog course={course} open={isEditing} onOpenChange={setIsEditing} />
+
+      {/* Archive confirm */}
+      <ConfirmDeleteDialog
+        open={isArchiving}
+        onOpenChange={setIsArchiving}
+        title="Archive Course"
+        description={`This will hide "${course.title}" from active views. You can restore it later by editing its status.`}
+        confirmLabel="Archive"
+        onConfirm={async () => {
+          await updateCourse.mutateAsync({ id: course.id, input: { status: "archived" } });
+          toast.success("Course archived.");
+          navigate("/courses", { replace: true });
+        }}
+      />
     </div>
   );
 }

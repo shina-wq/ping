@@ -1,11 +1,13 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { ReactNode } from "react";
 
 import type { Course } from "@/api/courses";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { COURSE_ACCENTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 // View-model type
@@ -20,15 +22,8 @@ export type CourseCard = {
 type CourseCardProps = CourseCard & {
   showProgress?: boolean;
   size?: "default" | "sm";
+  actions?:ReactNode;
 };
-
-const COURSE_ACCENTS = [
-  "bg-primary",
-  "bg-sky-500",
-  "bg-emerald-500",
-  "bg-violet-500",
-  "bg-orange-500",
-];
 
 export function mapCourse(course: Course, index: number): CourseCard {
   return {
@@ -41,7 +36,7 @@ export function mapCourse(course: Course, index: number): CourseCard {
 }
 
 // Component
-export function CourseCard({ id, title, instructor, progress, accent, showProgress = true, size= "default" }: CourseCardProps) {
+export function CourseCard({ id, title, instructor, progress, accent, showProgress = true, size= "default", actions }: CourseCardProps) {
   const isSm = size === "sm";
 
   return (
@@ -55,6 +50,7 @@ export function CourseCard({ id, title, instructor, progress, accent, showProgre
             </h3>
             <p className={cn("text-muted-foreground", isSm ? "text-xs" : "text-sm")}>{instructor}</p>
           </div>
+          {actions}
         </div>
         {showProgress ? (
           <div className="space-y-2">

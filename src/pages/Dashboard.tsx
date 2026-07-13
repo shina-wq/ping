@@ -40,19 +40,19 @@ const UPCOMING_ASSIGNMENT_STATUSES = new Set(["upcoming", "due_soon", "due_tomor
 
 function mapStats(s: StudentDashboardStats): StatCard[] {
   return [
-    { label: "Active Courses", value: String(s.activeCourses), icon: BookOpen, accent: "bg-primary/10 text-primary" },
-    { label: "Pending Assignments", value: String(s.pendingAssignments), icon: FileText, accent: "bg-orange-500/10 text-orange-500" },
-    { label: "Average Grade", value: `${s.averageGrade}%`, icon: Star, accent: "bg-emerald-500/10 text-emerald-600" },
-    { label: "Assignments due this week", value: String(s.assignmentsDueThisWeek), icon: FileText, accent: "bg-rose-500/10 text-rose-500" },
+    { label: "Active Courses", value: String(s.activeCourses), icon: BookOpen, accent: "bg-[var(--stat-accent-1-bg)] text-[var(--stat-accent-1-fg)]" },
+    { label: "Pending Assignments", value: String(s.pendingAssignments), icon: FileText, accent: "bg-[var(--stat-accent-2-bg)] text-[var(--stat-accent-2-fg)]" },
+    { label: "Average Grade", value: `${s.averageGrade}%`, icon: Star, accent: "bg-[var(--stat-accent-3-bg)] text-[var(--stat-accent-3-fg)]" },
+    { label: "Assignments due this week", value: String(s.assignmentsDueThisWeek), icon: FileText, accent: "bg-[var(--stat-accent-4-bg)] text-[var(--stat-accent-4-fg)]" },
   ];
 }
 
 function mapTeacherStats(s: TeacherDashboardStats): StatCard[] {
   return [
-    { label: "Total Students", value: String(s.totalStudents), icon: Users, accent: "bg-primary/10 text-primary" },
-    { label: "Pending to Grade", value: String(s.pendingSubmissions), icon: ClipboardList, accent: "bg-orange-500/10 text-orange-500" },
-    { label: "Class Average", value: `${s.averageClassGrade}%`, icon: BarChart3, accent: "bg-emerald-500/10 text-emerald-600" },
-    { label: "Published This Week", value: String(s.assignmentsPublishedThisWeek), icon: CalendarCheck, accent: "bg-violet-500/10 text-violet-500" },
+    { label: "Total Students", value: String(s.totalStudents), icon: Users, accent: "bg-[var(--stat-accent-1-bg)] text-[var(--stat-accent-1-fg)]" },
+    { label: "Pending to Grade", value: String(s.pendingSubmissions), icon: ClipboardList, accent: "bg-[var(--stat-accent-2-bg)] text-[var(--stat-accent-2-fg)]" },
+    { label: "Class Average", value: `${s.averageClassGrade}%`, icon: BarChart3, accent: "bg-[var(--stat-accent-3-bg)] text-[var(--stat-accent-3-fg)]" },
+    { label: "Published This Week", value: String(s.assignmentsPublishedThisWeek), icon: CalendarCheck, accent: "bg-[var(--stat-accent-4-bg)] text-[var(--stat-accent-4-fg)]" },
   ];
 }
 
