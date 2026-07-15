@@ -57,6 +57,11 @@ function getStatusIconConfig(status: LessonStatus, lessonId: string) {
     return config;
 }
 
+function getLessonIconConfig(status: LessonStatus, lessonId: string, isTeacher: boolean) {
+  if (isTeacher) return {icon: Circle, className: "text-muted-foreground"};
+  return getStatusIconConfig(status, lessonId);
+}
+
 function ModuleDetailSkeleton() {
     return (
         <div className="flex min-h-0 flex-col gap-6 lg:flex-row lg:gap-10">
@@ -147,12 +152,12 @@ export default function CourseModuleDetail() {
     const activeIndex  = lessons.findIndex((l) => l.id === activeLesson.id);
     const prevLesson   = activeIndex > 0 ? lessons[activeIndex - 1] : null;
     const nextLesson   = activeIndex < lessons.length - 1 ? lessons[activeIndex + 1] : null;
-    const isNextLocked = nextLesson?.status === "locked";
+    const isNextLocked = !isTeacher && nextLesson?.status === "locked";
 
     function handleNext() {
         if (!nextLesson || isNextLocked || !activeLesson) return;
         // Mark the lesson we're leaving as complete, then advance.
-        completeLesson.mutate(activeLesson.id);
+        if (!isTeacher) completeLesson.mutate(activeLesson.id);
         setActiveLesson(nextLesson);
     }
 
@@ -165,18 +170,26 @@ export default function CourseModuleDetail() {
                     <p className="mb-0.5 text-sm font-semibold text-foreground">
                         {moduleMeta?.title ?? "Module"}
                     </p>
-                    <p className="mb-3 text-xs text-muted-foreground">
-                        {completedCount} / {lessons.length} lessons completed
-                    </p>
-                    <Progress value={progress} className="h-1.5" />
+                    {isTeacher ? (
+                      <p className="text-xs text-muted-foreground">
+                        {lessons.length} lesson{lessons.length !== 1 ? "s" : ""}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="mb-3 text-xs text-muted-foreground">
+                          {completedCount} / {lessons.length} lessons completed
+                        </p>
+                        <Progress value={progress} className="h-1.5" />
+                      </>
+                    )}
                 </div>
 
                 {/* Lesson list */}
                 <nav className="space-y-0.5">
                     {lessons.map((lesson) => {
-                        const { icon: StatusIcon, className: iconClass } = getStatusIconConfig(lesson.status, lesson.id);
+                        const { icon: StatusIcon, className: iconClass } = getLessonIconConfig(lesson.status, lesson.id, isTeacher);
                         const isActive = lesson.id === activeLesson.id;
-                        const isLocked = lesson.status === "locked";
+                        const isLocked = !isTeacher && lesson.status === "locked";
 
                         return (
                             <div key={lesson.id} className="group relative flex items-start">

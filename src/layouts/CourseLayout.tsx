@@ -17,6 +17,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { AssignmentStatus } from "@/api/assignments";
+import { useCourseAssignments } from "@/hooks/use-assignments";
 
 const TABS = [
   { label: "Modules", path: "modules" },
@@ -24,6 +27,9 @@ const TABS = [
   { label: "Grades", path: "grades" },
   { label: "Announcements", path: "announcements" },
 ];
+
+// Statuses that countn as "not yet due" used to find the next deadline
+const PENDING_STATUSES: AssignmentStatus[] = ["upcoming", "due_soon", "due_tomorrow", "overdue"];
 
 function CourseLayoutSkeleton() {
   return (
@@ -78,6 +84,7 @@ export default function CourseLayout() {
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId?: string }>();
   const { data: course, isLoading } = useCourse(courseId || "");
   const { data: modules } = useModules(courseId || "");
+  const { data: assignments } = useCourseAssignments(courseId || "");
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -93,17 +100,23 @@ export default function CourseLayout() {
     return <p className="p-8 text-center text-muted-foreground">Course not found.</p>;
   }
 
-  // Derive module metadata when on a module detail page
   const moduleMeta = moduleId ? modules?.find((m) => m.id === moduleId) : null;
+  const currentPath = TABS.find((tab) =>
+    location.pathname.includes(`/${tab.path}`)
+  )?.path ?? "modules";
 
-  // Active tab derived from location pathname
-  const currentPath = location.pathname.split("/").pop() || "modules";
+  // layout data
+  const moduleCount = modules?.length ?? 0;
+  const lessonCount = modules?.reduce((sum, m) => sum + m.lessonCount, 0) ?? 0;
+  const nextDeadline = assignments
+    ?.filter((a) => PENDING_STATUSES.includes(a.status))
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
+  const termLabel = course.term && course.year ? `${course.term} ${course.year}` : null;
 
   return (
     <div className="-mx-4 -mt-6 flex flex-col lg:-mx-8">
       {/* Header */}
       <div className="relative bg-primary px-6 py-8 text-primary-foreground sm:px-10 lg:px-12">
-        {/* Teacher actions */}
         {isTeacher && (
           <div className="absolute right-6 top-6 sm:right-10 lg:right-12">
             <DropdownMenu>
@@ -138,10 +151,7 @@ export default function CourseLayout() {
           <ChevronRight className="mx-1 size-4" />
           {moduleMeta ? (
             <>
-              <Link
-                to={`/courses/${courseId}/modules`}
-                className="hover:text-primary-foreground"
-              >
+              <Link to={`/courses/${courseId}/modules`} className="hover:text-primary-foreground">
                 {course.title}
               </Link>
               <ChevronRight className="mx-1 size-4" />
@@ -158,29 +168,37 @@ export default function CourseLayout() {
           <p className="mb-6 text-base font-medium text-primary-foreground/90">
             {course.instructor || "Unknown Instructor"}
           </p>
-          <p className="px-2">&bull;</p>
-          <p className="mb-6 text-base font-medium text-primary-foreground/90">
-            Fall Semester 2024
-          </p>
+          {termLabel && (
+            <>
+              <p className="px-2">&bull;</p>
+              <p className="mb-6 text-base font-medium text-primary-foreground/90">{termLabel}</p>
+            </>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-primary-foreground/90 sm:gap-6">
           <div className="flex items-center gap-2">
             <BookOpen className="size-4" />
-            <span>4 Modules - 19 lessons</span>
+            <span>
+              {moduleCount} Module{moduleCount !== 1 ? "s" : ""} &bull; {lessonCount} lesson{lessonCount !== 1 ? "s" : ""}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <FileText className="size-4" />
-            <span>{course.taskCount || 4} Assignments</span>
+            <span>{course.taskCount ?? 0} Assignments</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="size-4" />
-            <span>Dec 14 - next deadline</span>
+            <span>
+              {nextDeadline
+                ? `${format(new Date(nextDeadline.dueDate), "MMM d")} - next deadline`
+                : "No upcoming deadlines"}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — unchanged */}
       <div className="border-b border-border bg-background px-6 sm:px-10 lg:px-12">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           {TABS.map((tab) => {
@@ -203,15 +221,12 @@ export default function CourseLayout() {
         </nav>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-auto bg-background p-6 sm:p-10 lg:px-12">
         <Outlet />
       </div>
 
-      {/* Edit dialog */}
       <CourseFormDialog course={course} open={isEditing} onOpenChange={setIsEditing} />
 
-      {/* Archive confirm */}
       <ConfirmDeleteDialog
         open={isArchiving}
         onOpenChange={setIsArchiving}
