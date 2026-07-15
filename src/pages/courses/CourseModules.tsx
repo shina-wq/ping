@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, Check, Clock10, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Check, Clock10, MoreHorizontal, Pencil, Plus, Trash2, Layers } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/contexts/auth-context";
@@ -36,6 +36,27 @@ function CourseModulesSkeleton() {
       ))}
     </div>
   );
+}
+
+function ModuleStatusIcon({completed, isTeacher}: {completed: boolean; isTeacher: boolean}) {
+  if (isTeacher) {
+    return (
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Layers className="size-5" strokeWidth={2.5}/>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex size-12 shrink-0 items-center justify-center rounded-full",
+        completed ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
+      )}
+    >
+      {completed ? <Check className="size-5" strokeWidth={2.5} /> : <Clock10 className="size-5" strokeWidth={2.5} />}
+    </div>
+  )
 }
 
 export default function CourseModules() {
@@ -99,18 +120,7 @@ export default function CourseModules() {
                 className="flex cursor-pointer flex-row items-center justify-between p-6 shadow-sm transition-colors hover:bg-muted/50"
               >
                 <div className="flex items-center gap-6">
-                  <div
-                    className={cn(
-                      "flex size-12 shrink-0 items-center justify-center rounded-full",
-                      completed ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
-                    )}
-                  >
-                    {completed ? (
-                      <Check className="size-6" strokeWidth={3} />
-                    ) : (
-                      <Clock10 className="size-6" strokeWidth={3} />
-                    )}
-                  </div>
+                  <ModuleStatusIcon completed={completed} isTeacher={isTeacher} />
 
                   <div className="text-left">
                     <h3 className="text-[17px] font-medium">{mod.title}</h3>
