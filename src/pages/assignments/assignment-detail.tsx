@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import {Link, useParams} from "react-router-dom";
+import {useNavigate, Link, useParams} from "react-router-dom";
 import {
     ChevronRight,
     CalendarDays,
@@ -7,12 +7,15 @@ import {
     Paperclip,
     BellRing,
     Upload,
-    XIcon
+    XIcon,
+    MoreVertical,
+    Pencil,
+    Trash2
 } from "lucide-react";
 import {format} from "date-fns";
 import { toast } from "sonner";
 
-import { useAssignment } from "@/hooks/use-assignments";
+import { useAssignment, useDeleteAssignment } from "@/hooks/use-assignments";
 import { useSubmitAssignment } from "@/hooks/use-submit-assignment";
 import { usePageHeader } from "@/components/page-header-context";
 import {Button} from "@/components/ui/button";
@@ -22,6 +25,11 @@ import { Badge } from "@/components/ui/badge";
 import { ApiError } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 import type { AssignmentStatus } from "@/api/assignments";
+
+import { useAuth } from "@/contexts/auth-context";
+import { AssignmentFormDialog } from "@/components/assignment-form-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // Status config
 const STATUS_CONFIG: Record<AssignmentStatus, {label: string; className: string}> = {
@@ -76,9 +84,16 @@ function AssignmentDetailSkeleton() {
 export default function AssignmentDetail() {
     usePageHeader({title: ""});
 
+    const navigate = useNavigate();
+    const {user} = useAuth();
+    const isTeacher = user?.role === "teacher";
+    const [isEditing, setIsEditing] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const {assignmentId} = useParams<{assignmentId: string}>();
     const {data: assignment, isLoading, error} = useAssignment(assignmentId ?? "");
     const submitAssignment = useSubmitAssignment();
+    const deleteAssignment = useDeleteAssignment();
 
     const [showSubmit, setShowSubmit] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -137,10 +152,36 @@ export default function AssignmentDetail() {
             {/* Indigo header */}
             <div className="relative bg-primary px-6 py-8 text-primary-foreground sm:px-10 lg:px-12">
                 {/* Due badge */}
-                <div className="absolute right-6 top-6 sm:right-10 lg:right-12">
+                <div className="absolute right-6 top-6 flex items-center gap-2 sm:right-10 lg:right-12">
                     <Badge className={cn("rounded-full px-3 py-1 text-sm font-semibold", statusCfg.className)}>
                         {statusCfg.label}
                     </Badge>
+
+                    {/* Teacher edit/delete */}
+                    {isTeacher && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="Assignment actions"
+                              className="text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground"
+                            >
+                              <MoreVertical className="size-4"/>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                              <Pencil className="size-4"/>
+                              Edit Assignmnent
+                            </DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" onClick={() => setIsDeleting(true)}>
+                              <Trash2 className="size-4" />
+                              Delete Assignment
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </div>
 
                 {/* Breadcrumb */}
@@ -307,7 +348,7 @@ export default function AssignmentDetail() {
                     {/* Right column */}
                     <div className="space-y-4">
                     {/* Submit button */}
-                    {isSubmittable && !showSubmit && (
+                    {isSubmittable && !showSubmit && !isTeacher &&(
                       <Button className="w-full" onClick={handleSubmitClick}>
                         Submit Assignment
                       </Button>
@@ -356,6 +397,29 @@ export default function AssignmentDetail() {
                   </div>
                 </div>
             </div>
+            {isTeacher && (
+              <>
+              <AssignmentFormDialog
+                courseId={assignment.courseId}
+                assignment={assignment}
+                open={isEditing}
+                onOpenChange={setIsEditing}
+              />
+
+              <ConfirmDeleteDialog
+                open={isDeleting}
+                onOpenChange={setIsDeleting}
+                title="Delete Assignment"
+                description={`This will permanently delete "${assignment.title}" and all its submissions. This cannot be undone.`}
+                confirmLabel="Delete"
+                onConfirm={async () => {
+                  await deleteAssignment.mutateAsync(assignment.id);
+                  toast.success("Assignment deleted.");
+                  navigate(`/courses/${assignment.courseId}/assignments`, { replace: true });
+                }}
+              />
+              </>
+            )}
         </div>
-    )
+    );
 }
